@@ -39,6 +39,5 @@
     "types": ["./worker-configuration.d.ts"]
   },
   "exclude": ["test"],
-  "include": [
-		"example/worker-configuration.d.ts", "src/**/*.ts"]
+  "include": ["example/worker-configuration.d.ts", "src/**/*.ts"]
 }
