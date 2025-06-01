@@ -1,0 +1,14 @@
+{
+  "name": "@mryhryki/cloudflare-session-worker",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "vitest",
+    "fmt": "biome check --write",
+    "lint": "biome check"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "typescript": "5.5.2",
+    "vitest": "3.0.7"
+  }
+}
