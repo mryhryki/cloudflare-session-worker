@@ -6,6 +6,9 @@
     "fmt": "biome check --write",
     "lint": "biome check"
   },
+  "dependencies": {
+    "openid-client": "^6.5.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "typescript": "5.5.2",
