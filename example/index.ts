@@ -16,6 +16,9 @@ const execSessionHandler = async (
 
   if (sessionHandler == null) {
     sessionHandler = await initSessionHandler({
+      cloudflare: {
+        kv: env.SESSION_STORE,
+      },
       oidc: {
         clientId: getRequiredEnv("OIDC__CLIENT_ID"),
         clientSecret: getRequiredEnv("OIDC__CLIENT_SECRET"),
@@ -26,8 +29,9 @@ const execSessionHandler = async (
         // e.g. `openssl rand -hex 32`
         signingKey: getRequiredEnv("SECRET__SIGNING_KEY"),
       },
-      onRequestWithValidSession: async (request, env, ctx, user) => {
-        return new Response(JSON.stringify(user, null, 2), {
+      onRequestWithValidSession: async (request, _env, _ctx, user) => {
+        const { pathname } = new URL(request.url);
+        return new Response(JSON.stringify({ pathname, user }, null, 2), {
           headers: {
             "Content-Type": "text/plain",
           },

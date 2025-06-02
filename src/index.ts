@@ -1,6 +1,8 @@
 import { discovery } from "openid-client";
 import { getSessionPaths } from "./constants";
+import { oidcCallbackHandler } from "./handlers/odic_callback";
 import { oidcRequestHandler } from "./handlers/odic_request";
+import { type CloudflareKV, Session } from "./lib/session";
 
 export type SessionHandler = (
   request: Request,
@@ -9,6 +11,9 @@ export type SessionHandler = (
 ) => Promise<Response>;
 
 export interface InitSessionHandlerArgs {
+  cloudflare: {
+    kv: CloudflareKV;
+  };
   oidc: {
     clientId: string;
     clientSecret: string;
@@ -31,6 +36,7 @@ export const initSessionHandler = async (
   args: InitSessionHandlerArgs,
 ): Promise<SessionHandler> => {
   const {
+    cloudflare: { kv: cloudflareKv },
     onRequestWithValidSession,
     oidc: { clientId, clientSecret, baseUrl },
   } = args;
@@ -47,12 +53,18 @@ export const initSessionHandler = async (
     const { pathname } = new URL(request.url);
     switch (pathname) {
       case paths.login:
-        return await oidcRequestHandler(request, env, ctx, {
-          openIdClientConfiguration: oidcConfiguration,
+        return await oidcRequestHandler(request, {
           callbackPath: paths.callback,
+          openIdClientConfiguration: oidcConfiguration,
+          session: Session.create(cloudflareKv),
         });
-      case paths.callback:
-        return new Response("TODO: Callback");
+      case paths.callback: {
+        const session = Session.continue(cloudflareKv, request);
+        return await oidcCallbackHandler(request, {
+          openIdClientConfiguration: oidcConfiguration,
+          session,
+        });
+      }
       case paths.logout:
         return new Response("TODO: Logout");
     }

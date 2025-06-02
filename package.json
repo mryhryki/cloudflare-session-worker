@@ -7,6 +7,7 @@
     "lint": "biome check"
   },
   "dependencies": {
+    "cookie": "^1.0.2",
     "openid-client": "^6.5.0"
   },
   "devDependencies": {

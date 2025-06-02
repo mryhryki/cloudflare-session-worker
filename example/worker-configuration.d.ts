@@ -3,6 +3,7 @@
 // Runtime types generated with workerd@1.20250525.0 2025-05-31
 declare namespace Cloudflare {
 	interface Env {
+    SESSION_STORE: KVNamespace
     [key: string]: string | undefined;
 	}
 }

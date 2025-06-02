@@ -1,4 +1,4 @@
-const generateRandomHex = (bit: number): string => {
+export const generateRandomHex = (bit: number): string => {
   const bin = new Uint8Array(Math.ceil(bit / 8));
   crypto.getRandomValues(bin);
   return Array.from(bin)

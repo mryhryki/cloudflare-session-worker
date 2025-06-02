@@ -1,47 +1,48 @@
 import {
   type Configuration as OpenIdClientConfiguration,
-  buildAuthorizationUrl,
-  calculatePKCECodeChallenge,
-  randomPKCECodeVerifier,
+  authorizationCodeGrant,
 } from "openid-client";
+import type { Session } from "../lib/session";
 
-import type { RequestHandler } from "../types";
-
-interface OdicRequestHandlerArgs {
+interface OdicCallbackHandlerArgs {
   openIdClientConfiguration: OpenIdClientConfiguration;
-  callbackPath: string;
-  scope?: string[];
+  session: Session;
 }
 
-export const oidcRequestHandler = async (
+export const oidcCallbackHandler = async (
   request: Request,
-  _env: Env,
-  _ctx: ExecutionContext,
-  args: OdicRequestHandlerArgs,
+  args: OdicCallbackHandlerArgs,
 ): Promise<Response> => {
+  const { session, openIdClientConfiguration } = args;
   try {
-    const { callbackPath, openIdClientConfiguration } = args;
+    const pkceCodeVerifier = (await session.get())?.pkceVerifier;
+    if (typeof pkceCodeVerifier !== "string") {
+      return new Response("PKCE code verifier not found in session", {
+        status: 400,
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      });
+    }
 
-    const scope: string = Array.from(
-      new Set([...(args.scope ?? []), "openid"]),
-    ).join(" ");
-    const redirect_uri = new URL(callbackPath, request.url).href;
+    await authorizationCodeGrant(
+      openIdClientConfiguration,
+      new URL(request.url),
+      {
+        pkceCodeVerifier,
+      },
+    );
 
-    const code_verifier = randomPKCECodeVerifier();
-    const code_challenge = await calculatePKCECodeChallenge(code_verifier);
+    // TODO: Get returnTo from session
+    // TODO: Check url in same origin
+    const returnTo = "/";
 
-    const location: string = buildAuthorizationUrl(openIdClientConfiguration, {
-      redirect_uri,
-      scope,
-      code_challenge,
-      code_challenge_method: "S256",
-    }).href;
-
-    return new Response(`Redirect to: ${location}`, {
+    return new Response(`Redirect to: ${returnTo}`, {
       status: 307,
       headers: {
-        Location: location,
+        Location: returnTo,
         "Content-Type": "text/plain",
+        "Set-Cookie": session.generateCookieValue(),
       },
     });
   } catch (err) {
