@@ -3,4 +3,5 @@
 logs/
 node_modules/
 npm-debug.log_
+package-lock.json
 temp/
