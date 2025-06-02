@@ -1,3 +1,4 @@
+import { decodeJwt } from "jose";
 import {
   type Configuration as OpenIdClientConfiguration,
   authorizationCodeGrant,
@@ -15,7 +16,7 @@ export const oidcCallbackHandler = async (
 ): Promise<Response> => {
   const { session, openIdClientConfiguration } = args;
   try {
-    const pkceCodeVerifier = (await session.get())?.pkceVerifier;
+    const pkceCodeVerifier = (await session.get())?.loginContext?.pkceVerifier;
     if (typeof pkceCodeVerifier !== "string") {
       return new Response("PKCE code verifier not found in session", {
         status: 400,
@@ -25,13 +26,25 @@ export const oidcCallbackHandler = async (
       });
     }
 
-    await authorizationCodeGrant(
+    const { id_token } = await authorizationCodeGrant(
       openIdClientConfiguration,
       new URL(request.url),
       {
         pkceCodeVerifier,
       },
     );
+
+    if (typeof id_token !== "string") {
+      return new Response("ID token not found in authorization response", {
+        status: 400,
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      });
+    }
+
+    const user = decodeJwt(id_token);
+    await session.put({ loginContext: null, user });
 
     // TODO: Get returnTo from session
     // TODO: Check url in same origin

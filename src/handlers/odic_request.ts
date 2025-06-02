@@ -1,10 +1,10 @@
 import {
+  type Configuration as OpenIdClientConfiguration,
   buildAuthorizationUrl,
   calculatePKCECodeChallenge,
-  type Configuration as OpenIdClientConfiguration,
   randomPKCECodeVerifier,
-} from 'openid-client'
-import type { Session } from '../lib/session'
+} from "openid-client";
+import type { Session } from "../lib/session";
 
 interface OdicRequestHandlerArgs {
   openIdClientConfiguration: OpenIdClientConfiguration;
@@ -18,7 +18,7 @@ export const oidcRequestHandler = async (
   args: OdicRequestHandlerArgs,
 ): Promise<Response> => {
   try {
-    const { callbackPath, openIdClientConfiguration, session } = args
+    const { callbackPath, openIdClientConfiguration, session } = args;
 
     const scope: string = Array.from(
       new Set([...(args.scope ?? []), "openid"]),
@@ -35,16 +35,22 @@ export const oidcRequestHandler = async (
       code_challenge_method: "S256",
     }).href;
 
-    await session.put({ pkceVerifier: code_verifier })
+    await session.put({
+      loginContext: {
+        pkceVerifier: code_verifier,
+        returnTo: null, // TODO
+      },
+      user: null,
+    });
 
     return new Response(`Redirect to: ${location}`, {
       status: 307,
       headers: {
         Location: location,
-        'Content-Type': 'text/plain',
-        'Set-Cookie': session.generateCookieValue(),
+        "Content-Type": "text/plain",
+        "Set-Cookie": session.generateCookieValue(),
       },
-    })
+    });
   } catch (err) {
     console.error(err);
     if (err instanceof Error) {

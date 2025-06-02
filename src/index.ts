@@ -28,7 +28,7 @@ export interface InitSessionHandlerArgs {
     request: Request,
     env: Env,
     ctx: ExecutionContext,
-    user: unknown /* TODO */,
+    user: Record<string, unknown>,
   ) => Promise<Response>;
 }
 
@@ -69,8 +69,17 @@ export const initSessionHandler = async (
         return new Response("TODO: Logout");
     }
 
-    const user: unknown = {}; // TODO
+    const sessionData = await Session.get(cloudflareKv, request);
+    if (sessionData?.user == null) {
+      return new Response(`Redirect to: ${paths.login}`, {
+        status: 307,
+        headers: {
+          Location: paths.login,
+          "Content-Type": "text/plain",
+        },
+      });
+    }
 
-    return onRequestWithValidSession(request, env, ctx, user);
+    return onRequestWithValidSession(request, env, ctx, sessionData.user);
   };
 };

@@ -31,11 +31,15 @@ const execSessionHandler = async (
       },
       onRequestWithValidSession: async (request, _env, _ctx, user) => {
         const { pathname } = new URL(request.url);
-        return new Response(JSON.stringify({ pathname, user }, null, 2), {
-          headers: {
-            "Content-Type": "text/plain",
+        const { sub, email } = user;
+        return new Response(
+          JSON.stringify({ pathname, user: { sub, email } }, null, 2),
+          {
+            headers: {
+              "Content-Type": "text/plain",
+            },
           },
-        });
+        );
       },
     });
   }

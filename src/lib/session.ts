@@ -1,5 +1,5 @@
 import { parse, serialize } from "cookie";
-import { generateRandomHex } from './random'
+import { generateRandomHex } from "./random";
 
 interface SessionConfiguration {
   maxLifetimeSec: number;
@@ -7,7 +7,11 @@ interface SessionConfiguration {
 }
 
 interface SessionData {
-  pkceVerifier: string | null;
+  loginContext: {
+    pkceVerifier: string;
+    returnTo?: string | null | undefined;
+  } | null;
+  user: Record<string, unknown> | null;
 }
 
 export interface CloudflareKV {
@@ -24,13 +28,30 @@ export class Session {
     idleLifetimeSec: 3 * 86400, // 3 days
   };
 
+  static async get(
+    kv: CloudflareKV,
+    request: Request,
+  ): Promise<SessionData | null> {
+    try {
+      const sessionId = Session.#getSessionId(request);
+      if (typeof sessionId !== "string") {
+        return null;
+      }
+      Session.#validateSessionId(sessionId);
+      return await kv.get<SessionData>(sessionId, "json");
+    } catch {
+      return null;
+    }
+  }
+
   static create(kv: CloudflareKV): Session {
-    const sessionId = generateRandomHex(256);
-    return new Session(kv, sessionId);
+    return new Session(kv, generateRandomHex(256));
   }
 
   static continue(kv: CloudflareKV, request: Request): Session {
-    const sessionId = parse(request.headers.get("Cookie") ?? '')[Session.cookieName];
+    const sessionId = parse(request.headers.get("Cookie") ?? "")[
+      Session.cookieName
+    ];
     if (typeof sessionId !== "string") {
       throw new Error("Session ID not found in request cookies");
     }
@@ -73,6 +94,15 @@ export class Session {
       sameSite: "lax",
       secure: true,
     });
+  }
+
+  static #getSessionId(request: Request): string | null {
+    const cookies = parse(request.headers.get("Cookie") ?? "");
+    const sessionId = cookies[Session.cookieName];
+    if (typeof sessionId === "string" && sessionId.trim().length > 0) {
+      return sessionId.trim();
+    }
+    return null;
   }
 
   static #validateSessionId(sessionId: string): void {
