@@ -1,10 +1,18 @@
 {
   "name": "@mryhryki/cloudflare-session-worker",
   "version": "0.0.1",
+  "volta": {
+    "node": "24.1.0",
+    "npm": "11.4.1"
+  },
   "scripts": {
-    "test": "vitest",
+    "check": "npm run lint && npm run type && npm run test && echo '### Check: OK ###'",
     "fmt": "biome check --write",
-    "lint": "biome check"
+    "lint": "biome check",
+    "test": "vitest run --dir ./src/ --disable-console-intercept",
+    "test:watch": "vitest watch --dir ./src/ --disable-console-intercept",
+    "type": "tsc --erasableSyntaxOnly",
+    "type:watch": "tsc --watch --erasableSyntaxOnly"
   },
   "dependencies": {
     "cookie": "1.0.2",
@@ -13,7 +21,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "typescript": "5.5.2",
-    "vitest": "3.0.7"
+    "typescript": "5.8.3",
+    "vitest": "3.1.4"
   }
 }
