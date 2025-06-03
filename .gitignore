@@ -1,4 +1,5 @@
 .npm
+.dev.vars
 .wrangler/
 logs/
 node_modules/

@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
+    "dev": "source .dev.vars && wrangler dev --port 58125",
     "test": "vitest",
     "cf-typegen": "wrangler types"
   },
