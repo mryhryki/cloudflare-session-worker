@@ -42,7 +42,6 @@ export const initSessionHandler = async (
   } = args;
   const paths = getSessionPaths();
 
-  console.log(baseUrl, clientId, clientSecret);
   const oidcConfiguration = await discovery(
     new URL(baseUrl),
     clientId,
@@ -71,10 +70,14 @@ export const initSessionHandler = async (
 
     const sessionData = await Session.get(cloudflareKv, request);
     if (sessionData?.user == null) {
-      return new Response(`Redirect to: ${paths.login}`, {
+      const loginUrl = new URL(paths.login, request.url);
+      const { pathname: returnTo } = new URL(request.url);
+      loginUrl.searchParams.set("returnTo", returnTo);
+
+      return new Response(`Redirect to: ${loginUrl.toString()}`, {
         status: 307,
         headers: {
-          Location: paths.login,
+          Location: loginUrl.toString(),
           "Content-Type": "text/plain",
         },
       });

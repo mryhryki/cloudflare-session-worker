@@ -35,10 +35,13 @@ export const oidcRequestHandler = async (
       code_challenge_method: "S256",
     }).href;
 
+    const returnTo: string | null =
+      new URL(request.url).searchParams.get("returnTo") ?? null;
+
     await session.put({
       loginContext: {
         pkceVerifier: code_verifier,
-        returnTo: null, // TODO
+        returnTo,
       },
       user: null,
     });

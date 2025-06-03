@@ -1,0 +1,4 @@
+export OIDC__BASE_URL=''
+export OIDC__CLIENT_ID=''
+export OIDC__CLIENT_SECRET=''
+export SECRET__SIGNING_KEY='<e.g. `openssl rand -hex 32`>'
