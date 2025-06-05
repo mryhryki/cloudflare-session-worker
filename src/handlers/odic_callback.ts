@@ -3,7 +3,8 @@ import {
   type Configuration as OpenIdClientConfiguration,
   authorizationCodeGrant,
 } from "openid-client";
-import type { Session } from "../lib/session";
+import type { Session } from "../lib/session/index.ts";
+import { isLocalhost } from "../util/request.ts";
 
 interface OdicCallbackHandlerArgs {
   openIdClientConfiguration: OpenIdClientConfiguration;
@@ -16,8 +17,8 @@ export const oidcCallbackHandler = async (
 ): Promise<Response> => {
   const { session, openIdClientConfiguration } = args;
   try {
-    const currentSession = await session.get();
-    const pkceCodeVerifier = currentSession?.loginContext?.pkceVerifier;
+    const record = await session.get();
+    const pkceCodeVerifier = record?.data?.loginContext?.pkceVerifier;
     if (typeof pkceCodeVerifier !== "string") {
       return new Response("PKCE code verifier not found in session", {
         status: 400,
@@ -48,7 +49,7 @@ export const oidcCallbackHandler = async (
     await session.put({ loginContext: null, user });
 
     let returnTo: URL = new URL(
-      currentSession?.loginContext?.returnTo ?? "/",
+      record?.data?.loginContext?.returnTo ?? "/",
       request.url,
     );
     if (returnTo.origin !== new URL(request.url).origin) {
@@ -60,7 +61,7 @@ export const oidcCallbackHandler = async (
       headers: {
         Location: returnTo.toString(),
         "Content-Type": "text/plain",
-        "Set-Cookie": session.generateCookieValue(),
+        "Set-Cookie": await session.generateCookieValue(!isLocalhost(request)),
       },
     });
   } catch (err) {

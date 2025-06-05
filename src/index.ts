@@ -2,7 +2,8 @@ import { discovery } from "openid-client";
 import { getSessionPaths } from "./constants";
 import { oidcCallbackHandler } from "./handlers/odic_callback";
 import { oidcRequestHandler } from "./handlers/odic_request";
-import { type CloudflareKV, Session } from "./lib/session";
+import { type CloudflareKV, Session } from "./lib/session/index.ts";
+import { isLocalhost } from "./util/request.ts";
 
 export type SessionHandler = (
   request: Request,
@@ -59,6 +60,9 @@ export const initSessionHandler = async (
         });
       case paths.callback: {
         const session = Session.continue(cloudflareKv, request);
+        if (session == null) {
+          return new Response("Session not found", { status: 400 });
+        }
         return await oidcCallbackHandler(request, {
           openIdClientConfiguration: oidcConfiguration,
           session,
@@ -68,8 +72,10 @@ export const initSessionHandler = async (
         return new Response("TODO: Logout");
     }
 
-    const sessionData = await Session.get(cloudflareKv, request);
-    if (sessionData?.user == null) {
+    const session = Session.continue(cloudflareKv, request);
+    const record = await session?.get();
+
+    if (session == null || record?.data?.user == null) {
       const loginUrl = new URL(paths.login, request.url);
       const { pathname: returnTo } = new URL(request.url);
       loginUrl.searchParams.set("returnTo", returnTo);
@@ -83,6 +89,16 @@ export const initSessionHandler = async (
       });
     }
 
-    return onRequestWithValidSession(request, env, ctx, sessionData.user);
+    const response = await onRequestWithValidSession(
+      request,
+      env,
+      ctx,
+      record.data.user,
+    );
+    response.headers.set(
+      "Set-Cookie",
+      await session.generateCookieValue(!isLocalhost(request)),
+    );
+    return response;
   };
 };
