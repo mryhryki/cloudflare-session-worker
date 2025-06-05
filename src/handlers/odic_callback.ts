@@ -3,7 +3,8 @@ import {
   type Configuration as OpenIdClientConfiguration,
   authorizationCodeGrant,
 } from "openid-client";
-import type { Session } from "../lib/session";
+import type { Session } from "../lib/session/index.ts";
+import { isLocalhost } from "../util/request.ts";
 
 interface OdicCallbackHandlerArgs {
   openIdClientConfiguration: OpenIdClientConfiguration;
@@ -60,7 +61,7 @@ export const oidcCallbackHandler = async (
       headers: {
         Location: returnTo.toString(),
         "Content-Type": "text/plain",
-        "Set-Cookie": session.generateCookieValue(),
+        "Set-Cookie": await session.generateCookieValue(!isLocalhost(request)),
       },
     });
   } catch (err) {

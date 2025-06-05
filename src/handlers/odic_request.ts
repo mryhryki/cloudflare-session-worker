@@ -4,7 +4,8 @@ import {
   calculatePKCECodeChallenge,
   randomPKCECodeVerifier,
 } from "openid-client";
-import type { Session } from "../lib/session";
+import type { Session } from "../lib/session/index.ts";
+import { isLocalhost } from "../util/request.ts";
 
 interface OdicRequestHandlerArgs {
   openIdClientConfiguration: OpenIdClientConfiguration;
@@ -51,7 +52,7 @@ export const oidcRequestHandler = async (
       headers: {
         Location: location,
         "Content-Type": "text/plain",
-        "Set-Cookie": session.generateCookieValue(),
+        "Set-Cookie": await session.generateCookieValue(!isLocalhost(request)),
       },
     });
   } catch (err) {

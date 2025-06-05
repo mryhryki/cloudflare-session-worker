@@ -1,31 +1,10 @@
 import { parse, serialize } from "cookie";
-import { generateRandomHex } from "./random";
-
-interface SessionInterface {
-  get(): Promise<SessionRecord | null>;
-  put(data: SessionData): Promise<void>;
-  delete(): Promise<void>;
-}
+import { generateRandomHex } from "../random.ts";
+import type { SessionData, SessionInterface, SessionRecord } from "./types.ts";
 
 interface SessionConfiguration {
   maxLifetimeSec: number;
   idleLifetimeSec: number;
-}
-
-interface SessionData {
-  loginContext: {
-    pkceVerifier: string;
-    returnTo?: string | null | undefined;
-  } | null;
-  user: Record<string, unknown> | null;
-}
-
-interface SessionRecord {
-  data: SessionData;
-  expiration: {
-    absolute: number;
-    idle: number;
-  };
 }
 
 export interface CloudflareKV {
@@ -109,13 +88,21 @@ export class Session implements SessionInterface {
     await this.#kv.delete(this.#sessionId);
   }
 
-  generateCookieValue(): string {
+  async generateCookieValue(secure: boolean): Promise<string> {
+    const record = await this.get();
+    const expiresUnixSec =
+      record == null
+        ? this.#getNowUnixSec() + Session.configuration.maxLifetimeSec
+        : Math.min(record.expiration.absolute, record.expiration.idle);
+    const expires = new Date();
+    expires.setTime(expiresUnixSec * 1000);
+
     return serialize(Session.cookieName, this.#sessionId, {
       httpOnly: true,
-      maxAge: Session.configuration.maxLifetimeSec,
+      expires,
       path: "/",
       sameSite: "lax",
-      secure: true,
+      secure,
     });
   }
 
