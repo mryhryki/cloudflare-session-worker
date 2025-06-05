@@ -59,6 +59,9 @@ export const initSessionHandler = async (
         });
       case paths.callback: {
         const session = Session.continue(cloudflareKv, request);
+        if (session == null) {
+          return new Response("Session not found", { status: 400 });
+        }
         return await oidcCallbackHandler(request, {
           openIdClientConfiguration: oidcConfiguration,
           session,
@@ -68,8 +71,10 @@ export const initSessionHandler = async (
         return new Response("TODO: Logout");
     }
 
-    const sessionData = await Session.get(cloudflareKv, request);
-    if (sessionData?.user == null) {
+    const session = Session.continue(cloudflareKv, request);
+    const record = await session?.get();
+
+    if (record?.data?.user == null) {
       const loginUrl = new URL(paths.login, request.url);
       const { pathname: returnTo } = new URL(request.url);
       loginUrl.searchParams.set("returnTo", returnTo);
@@ -83,6 +88,6 @@ export const initSessionHandler = async (
       });
     }
 
-    return onRequestWithValidSession(request, env, ctx, sessionData.user);
+    return onRequestWithValidSession(request, env, ctx, record?.data?.user);
   };
 };

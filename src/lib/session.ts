@@ -1,6 +1,12 @@
 import { parse, serialize } from "cookie";
 import { generateRandomHex } from "./random";
 
+interface SessionInterface {
+  get(): Promise<SessionRecord | null>;
+  put(data: SessionData): Promise<void>;
+  delete(): Promise<void>;
+}
+
 interface SessionConfiguration {
   maxLifetimeSec: number;
   idleLifetimeSec: number;
@@ -14,13 +20,25 @@ interface SessionData {
   user: Record<string, unknown> | null;
 }
 
+interface SessionRecord {
+  data: SessionData;
+  expiration: {
+    absolute: number;
+    idle: number;
+  };
+}
+
 export interface CloudflareKV {
   get<T>(key: string, type: "json"): Promise<T | null>;
-  put(key: string, value: string): Promise<void>;
+  put(
+    key: string,
+    value: string,
+    options: { expiration?: number },
+  ): Promise<void>;
   delete(key: string): Promise<void>;
 }
 
-export class Session {
+export class Session implements SessionInterface {
   private static cookieName = "session";
 
   private static configuration: SessionConfiguration = {
@@ -28,43 +46,27 @@ export class Session {
     idleLifetimeSec: 3 * 86400, // 3 days
   };
 
-  static async get(
-    kv: CloudflareKV,
-    request: Request,
-  ): Promise<SessionData | null> {
+  static create(kv: CloudflareKV): Session {
+    return new Session(kv, generateRandomHex(256));
+  }
+
+  static continue(kv: CloudflareKV, request: Request): Session | null {
     try {
-      const sessionId = Session.#getSessionId(request);
-      if (typeof sessionId !== "string") {
-        return null;
-      }
-      Session.#validateSessionId(sessionId);
-      return await kv.get<SessionData>(sessionId, "json");
+      const cookieValue: string = request.headers.get("Cookie") ?? "";
+      const sessionId: string =
+        parse(cookieValue)[Session.cookieName] ?? "(none)";
+      return new Session(kv, sessionId);
     } catch {
       return null;
     }
   }
 
-  static create(kv: CloudflareKV): Session {
-    return new Session(kv, generateRandomHex(256));
-  }
-
-  static continue(kv: CloudflareKV, request: Request): Session {
-    const sessionId = parse(request.headers.get("Cookie") ?? "")[
-      Session.cookieName
-    ];
-    if (typeof sessionId !== "string") {
-      throw new Error("Session ID not found in request cookies");
-    }
-    Session.#validateSessionId(sessionId);
-    return new Session(kv, sessionId);
-  }
-
   #sessionId: string;
   #kv: CloudflareKV;
+  #record: SessionRecord | null = null;
 
   private constructor(kv: CloudflareKV, sessionId: string) {
-    Session.#validateSessionId(sessionId);
-    this.#sessionId = sessionId;
+    this.#sessionId = this.#validateSessionId(sessionId);
     this.#kv = kv;
   }
 
@@ -72,14 +74,35 @@ export class Session {
     return this.#sessionId;
   }
 
-  async get(): Promise<SessionData | null> {
-    // TODO: Check expiration
-    return await this.#kv.get<SessionData>(this.#sessionId, "json");
+  async get(): Promise<SessionRecord | null> {
+    if (this.#record != null && this.#isLive(this.#record)) {
+      return this.#record;
+    }
+
+    const record = await this.#kv.get<SessionRecord>(this.#sessionId, "json");
+    if (record == null || !this.#isLive(record)) {
+      return null;
+    }
+
+    // TODO: Validate the record
+
+    this.#record = record;
+    return record;
   }
 
   async put(data: SessionData): Promise<void> {
-    // TODO: Add expiration
-    await this.#kv.put(this.#sessionId, JSON.stringify(data));
+    const nowUnixSec = this.#getNowUnixSec();
+    const absolute: number =
+      (await this.get())?.expiration?.absolute ??
+      nowUnixSec + Session.configuration.maxLifetimeSec;
+    const idle: number = nowUnixSec + Session.configuration.idleLifetimeSec;
+    const record: SessionRecord = {
+      data,
+      expiration: { absolute, idle },
+    };
+    await this.#kv.put(this.#sessionId, JSON.stringify(record), {
+      expiration: Math.min(absolute, idle),
+    });
   }
 
   async delete(): Promise<void> {
@@ -96,17 +119,23 @@ export class Session {
     });
   }
 
-  static #getSessionId(request: Request): string | null {
-    const cookies = parse(request.headers.get("Cookie") ?? "");
-    const sessionId = cookies[Session.cookieName];
-    if (typeof sessionId === "string" && sessionId.trim().length > 0) {
-      return sessionId.trim();
+  #validateSessionId(value: unknown): string {
+    if (typeof value === "string" && /^[0-9a-f]{64,}$/.test(value)) {
+      return value;
     }
-    return null;
+    throw new Error(`Invalid session ID: ${JSON.stringify(value)}`);
   }
 
-  static #validateSessionId(sessionId: string): void {
-    if (/^[0-9a-f]{64,}$/.test(sessionId)) return;
-    throw new Error(`Invalid session ID: ${sessionId}`);
+  #getNowUnixSec(): number {
+    return Math.floor(Date.now() / 1000);
+  }
+
+  #isLive(record: SessionRecord): boolean {
+    const nowUnixSec = this.#getNowUnixSec();
+    const expiration = Math.min(
+      record.expiration.absolute,
+      record.expiration.idle,
+    );
+    return nowUnixSec < expiration;
   }
 }
