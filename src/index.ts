@@ -27,7 +27,7 @@ export const requireAuth = async (
       if (session != null) {
         // TODO: Get redirect path from session and arguments
         const pathname = session?.loginContext?.returnTo ?? "/";
-        const redirectUrl = forceSameOrigin(pathname, req);
+        const redirectUrl = forceSameOrigin(pathname, req.url);
         return new Response(`Redirect to: ${redirectUrl.toString()}`, {
           status: 307,
           headers: {
