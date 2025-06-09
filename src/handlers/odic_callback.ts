@@ -1,24 +1,28 @@
 import { decodeJwt } from "jose";
-import {
-  type Configuration as OpenIdClientConfiguration,
-  authorizationCodeGrant,
-} from "openid-client";
-import type { Session } from "../lib/session/index.ts";
-import { isLocalhost } from "../util/request.ts";
+import { authorizationCodeGrant } from "openid-client";
+import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
+import type { SessionStoreInterface } from "../types/session.ts";
+import type {
+  InitSessionHandlerParams,
+  OidcParams,
+} from "../types/session_handler.ts";
 
 interface OdicCallbackHandlerArgs {
-  openIdClientConfiguration: OpenIdClientConfiguration;
-  session: Session;
+  oidcParams: OidcParams;
+  sessionStore: SessionStoreInterface;
 }
 
 export const oidcCallbackHandler = async (
   request: Request,
   args: OdicCallbackHandlerArgs,
 ): Promise<Response> => {
-  const { session, openIdClientConfiguration } = args;
+  const {
+    sessionStore,
+    oidcParams: { baseUrl, clientId, clientSecret },
+  } = args;
   try {
-    const record = await session.get();
-    const pkceCodeVerifier = record?.data?.loginContext?.pkceVerifier;
+    const session = await sessionStore.get();
+    const pkceCodeVerifier = session?.loginContext?.pkceVerifier;
     if (typeof pkceCodeVerifier !== "string") {
       return new Response("PKCE code verifier not found in session", {
         status: 400,
@@ -28,6 +32,11 @@ export const oidcCallbackHandler = async (
       });
     }
 
+    const openIdClientConfiguration = await getOidcConfiguration({
+      baseUrl,
+      clientId,
+      clientSecret,
+    });
     const { id_token } = await authorizationCodeGrant(
       openIdClientConfiguration,
       new URL(request.url),
@@ -45,25 +54,26 @@ export const oidcCallbackHandler = async (
       });
     }
 
-    const user = decodeJwt(id_token);
-    await session.put({ loginContext: null, user });
-
     let returnTo: URL = new URL(
-      record?.data?.loginContext?.returnTo ?? "/",
+      session?.loginContext?.returnTo ?? "/",
       request.url,
     );
     if (returnTo.origin !== new URL(request.url).origin) {
       returnTo = new URL("/", request.url);
     }
 
-    return new Response(`Redirect to: ${returnTo.toString()}`, {
+    const response = new Response(`Redirect to: ${returnTo.toString()}`, {
       status: 307,
       headers: {
         Location: returnTo.toString(),
         "Content-Type": "text/plain",
-        "Set-Cookie": await session.generateCookieValue(!isLocalhost(request)),
       },
     });
+
+    const user = decodeJwt(id_token);
+    await sessionStore.put({ loginContext: null, user }, response);
+
+    return response;
   } catch (err) {
     console.error(err);
     if (err instanceof Error) {

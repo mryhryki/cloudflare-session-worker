@@ -1,104 +1,76 @@
-import { discovery } from "openid-client";
 import { getSessionPaths } from "./constants";
 import { oidcCallbackHandler } from "./handlers/odic_callback";
 import { oidcRequestHandler } from "./handlers/odic_request";
-import { type CloudflareKV, Session } from "./lib/session/index.ts";
-import { isLocalhost } from "./util/request.ts";
+import { createSessionStore } from "./lib/session/create.ts";
+import { getSessionStore } from "./lib/session/get.ts";
+import type {
+  InitSessionHandlerParams,
+  OnRequestWithAuth,
+} from "./types/session_handler.ts";
+import { forceSameOrigin } from "./util/url.ts";
 
-export type SessionHandler = (
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-) => Promise<Response>;
-
-export interface InitSessionHandlerArgs {
-  cloudflare: {
-    kv: CloudflareKV;
-  };
-  oidc: {
-    clientId: string;
-    clientSecret: string;
-    // e.g.
-    // - Amazon Cognito: https://cognito-idp.{region}.amazonaws.com/{region}_{random}
-    baseUrl: string;
-  };
-  secret: {
-    signingKey: string;
-  };
-  onRequestWithValidSession: (
-    request: Request,
-    env: Env,
-    ctx: ExecutionContext,
-    user: Record<string, unknown>,
-  ) => Promise<Response>;
-}
-
-export const initSessionHandler = async (
-  args: InitSessionHandlerArgs,
-): Promise<SessionHandler> => {
+export const requireAuth = async (
+  handler: OnRequestWithAuth,
+  params: InitSessionHandlerParams,
+): Promise<Response> => {
   const {
-    cloudflare: { kv: cloudflareKv },
-    onRequestWithValidSession,
-    oidc: { clientId, clientSecret, baseUrl },
-  } = args;
+    cloudflare: { req, kv },
+  } = params;
   const paths = getSessionPaths();
 
-  const oidcConfiguration = await discovery(
-    new URL(baseUrl),
-    clientId,
-    clientSecret,
-  );
+  const sessionStore = await getSessionStore(kv, req);
+  const session = await sessionStore?.get();
 
-  return async (request, env, ctx) => {
-    const { pathname } = new URL(request.url);
-    switch (pathname) {
-      case paths.login:
-        return await oidcRequestHandler(request, {
-          callbackPath: paths.callback,
-          openIdClientConfiguration: oidcConfiguration,
-          session: Session.create(cloudflareKv),
-        });
-      case paths.callback: {
-        const session = Session.continue(cloudflareKv, request);
-        if (session == null) {
-          return new Response("Session not found", { status: 400 });
-        }
-        return await oidcCallbackHandler(request, {
-          openIdClientConfiguration: oidcConfiguration,
-          session,
+  const { pathname } = new URL(req.url);
+  switch (pathname) {
+    case paths.login: {
+      if (session != null) {
+        // TODO: Get redirect path from session and arguments
+        const pathname = session?.loginContext?.returnTo ?? "/";
+        const redirectUrl = forceSameOrigin(pathname, req.url);
+        return new Response(`Redirect to: ${redirectUrl.toString()}`, {
+          status: 307,
+          headers: {
+            Location: redirectUrl.toString(),
+            "Content-Type": "text/plain",
+          },
         });
       }
-      case paths.logout:
-        return new Response("TODO: Logout");
-    }
-
-    const session = Session.continue(cloudflareKv, request);
-    const record = await session?.get();
-
-    if (session == null || record?.data?.user == null) {
-      const loginUrl = new URL(paths.login, request.url);
-      const { pathname: returnTo } = new URL(request.url);
-      loginUrl.searchParams.set("returnTo", returnTo);
-
-      return new Response(`Redirect to: ${loginUrl.toString()}`, {
-        status: 307,
-        headers: {
-          Location: loginUrl.toString(),
-          "Content-Type": "text/plain",
-        },
+      const newSession = await createSessionStore(kv, req);
+      return await oidcRequestHandler(req, {
+        callbackPath: paths.callback,
+        oidcParams: params.oidc,
+        session: newSession,
       });
     }
+    case paths.callback: {
+      if (sessionStore == null) {
+        return new Response("Session ID not found", { status: 400 });
+      }
+      return await oidcCallbackHandler(req, {
+        oidcParams: params.oidc,
+        sessionStore,
+      });
+    }
+    case paths.logout:
+      return new Response("TODO: Logout");
+  }
 
-    const response = await onRequestWithValidSession(
-      request,
-      env,
-      ctx,
-      record.data.user,
-    );
-    response.headers.set(
-      "Set-Cookie",
-      await session.generateCookieValue(!isLocalhost(request)),
-    );
-    return response;
-  };
+  if (sessionStore == null || session == null || session?.user == null) {
+    const loginUrl = new URL(paths.login, req.url);
+    const { pathname: returnTo } = new URL(req.url);
+    loginUrl.searchParams.set("returnTo", returnTo);
+
+    return new Response(`Redirect to: ${loginUrl.toString()}`, {
+      status: 307,
+      headers: {
+        Location: loginUrl.toString(),
+        "Content-Type": "text/plain",
+      },
+    });
+  }
+
+  const response = await handler(session.user);
+  await sessionStore.put(session, response);
+  return response;
 };

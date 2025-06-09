@@ -4,13 +4,17 @@ import {
   calculatePKCECodeChallenge,
   randomPKCECodeVerifier,
 } from "openid-client";
-import type { Session } from "../lib/session/index.ts";
-import { isLocalhost } from "../util/request.ts";
+import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
+import type { SessionStoreInterface } from "../types/session.ts";
+import type {
+  InitSessionHandlerParams,
+  OidcParams,
+} from "../types/session_handler.ts";
 
 interface OdicRequestHandlerArgs {
-  openIdClientConfiguration: OpenIdClientConfiguration;
   callbackPath: string;
-  session: Session;
+  oidcParams: OidcParams;
+  session: SessionStoreInterface;
   scope?: string[];
 }
 
@@ -19,7 +23,11 @@ export const oidcRequestHandler = async (
   args: OdicRequestHandlerArgs,
 ): Promise<Response> => {
   try {
-    const { callbackPath, openIdClientConfiguration, session } = args;
+    const {
+      callbackPath,
+      oidcParams: { baseUrl, clientId, clientSecret },
+      session,
+    } = args;
 
     const scope: string = Array.from(
       new Set([...(args.scope ?? []), "openid"]),
@@ -29,6 +37,11 @@ export const oidcRequestHandler = async (
     const code_verifier = randomPKCECodeVerifier();
     const code_challenge = await calculatePKCECodeChallenge(code_verifier);
 
+    const openIdClientConfiguration = await getOidcConfiguration({
+      baseUrl,
+      clientId,
+      clientSecret,
+    });
     const location: string = buildAuthorizationUrl(openIdClientConfiguration, {
       redirect_uri,
       scope,
@@ -39,22 +52,26 @@ export const oidcRequestHandler = async (
     const returnTo: string | null =
       new URL(request.url).searchParams.get("returnTo") ?? null;
 
-    await session.put({
-      loginContext: {
-        pkceVerifier: code_verifier,
-        returnTo,
-      },
-      user: null,
-    });
-
-    return new Response(`Redirect to: ${location}`, {
+    const response = new Response(`Redirect to: ${location}`, {
       status: 307,
       headers: {
         Location: location,
         "Content-Type": "text/plain",
-        "Set-Cookie": await session.generateCookieValue(!isLocalhost(request)),
       },
     });
+
+    await session.put(
+      {
+        loginContext: {
+          pkceVerifier: code_verifier,
+          returnTo,
+        },
+        user: null,
+      },
+      response,
+    );
+
+    return response;
   } catch (err) {
     console.error(err);
     if (err instanceof Error) {

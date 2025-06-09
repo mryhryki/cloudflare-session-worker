@@ -15,7 +15,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "esnext",
-    "types": ["./example/worker-configuration.d.ts"]
+    "types": ["@cloudflare/workers-types"]
   },
   "include": ["./src/**/*.ts", "./example/**/*.ts"],
   "exclude": ["node_modules/**"]
