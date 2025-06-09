@@ -1,4 +1,4 @@
-import { parse, serialize } from "cookie";
+import { type SerializeOptions, parse, serialize } from "cookie";
 
 const DefaultCookieName = "session";
 
@@ -11,25 +11,46 @@ export const getSessionId = (
   return cookies[cookieName] ?? null;
 };
 
-interface SetSessionCookieArgs {
+const BaseSerializeOptions: SerializeOptions = {
+  httpOnly: true,
+  path: "/",
+  sameSite: "lax",
+};
+
+interface BaseArgs {
   cookieName?: string;
   sessionId: string;
   secure: boolean;
+}
+
+interface SetSessionCookieArgs extends BaseArgs {
   expires: Date;
 }
 
 export const setSessionCookie = (
-  response: Response,
+  res: Response,
   args: SetSessionCookieArgs,
-): Response => {
+): void => {
   const { cookieName = DefaultCookieName, sessionId, secure, expires } = args;
   const cookieValue = serialize(cookieName, sessionId, {
-    httpOnly: true,
+    ...BaseSerializeOptions,
     expires,
-    path: "/",
-    sameSite: "lax",
     secure,
   });
-  response.headers.append("Set-Cookie", cookieValue);
-  return response;
+  res.headers.append("Set-Cookie", cookieValue);
+};
+
+interface DeleteSessionCookieArgs extends BaseArgs {}
+
+export const deleteSessionCookie = (
+  res: Response,
+  args: DeleteSessionCookieArgs,
+): void => {
+  const { cookieName = DefaultCookieName, sessionId, secure } = args;
+  const cookieValue = serialize(cookieName, sessionId, {
+    ...BaseSerializeOptions,
+    maxAge: 0,
+    secure,
+  });
+  res.headers.append("Set-Cookie", cookieValue);
 };
