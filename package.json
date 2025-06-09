@@ -15,6 +15,7 @@
     "type:watch": "tsc --watch --erasableSyntaxOnly"
   },
   "dependencies": {
+    "@cloudflare/workers-types": "^4.20250607.0",
     "cookie": "1.0.2",
     "jose": "6.0.11",
     "openid-client": "6.5.0"
