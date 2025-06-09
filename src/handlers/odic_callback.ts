@@ -1,12 +1,14 @@
 import { decodeJwt } from "jose";
-import {
-  type Configuration as OpenIdClientConfiguration,
-  authorizationCodeGrant,
-} from "openid-client";
+import { authorizationCodeGrant } from "openid-client";
+import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
 import type { SessionStoreInterface } from "../types/session.ts";
+import type {
+  InitSessionHandlerParams,
+  OidcParams,
+} from "../types/session_handler.ts";
 
 interface OdicCallbackHandlerArgs {
-  openIdClientConfiguration: OpenIdClientConfiguration;
+  oidcParams: OidcParams;
   sessionStore: SessionStoreInterface;
 }
 
@@ -14,7 +16,10 @@ export const oidcCallbackHandler = async (
   request: Request,
   args: OdicCallbackHandlerArgs,
 ): Promise<Response> => {
-  const { sessionStore, openIdClientConfiguration } = args;
+  const {
+    sessionStore,
+    oidcParams: { baseUrl, clientId, clientSecret },
+  } = args;
   try {
     const session = await sessionStore.get();
     const pkceCodeVerifier = session?.loginContext?.pkceVerifier;
@@ -27,6 +32,11 @@ export const oidcCallbackHandler = async (
       });
     }
 
+    const openIdClientConfiguration = await getOidcConfiguration({
+      baseUrl,
+      clientId,
+      clientSecret,
+    });
     const { id_token } = await authorizationCodeGrant(
       openIdClientConfiguration,
       new URL(request.url),

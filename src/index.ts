@@ -1,34 +1,25 @@
-import { discovery } from "openid-client";
 import { getSessionPaths } from "./constants";
 import { oidcCallbackHandler } from "./handlers/odic_callback";
 import { oidcRequestHandler } from "./handlers/odic_request";
 import { createSessionStore } from "./lib/session/create.ts";
 import { getSessionStore } from "./lib/session/get.ts";
 import type {
-  InitSessionHandlerArgs,
+  InitSessionHandlerParams,
   OnRequestWithAuth,
 } from "./types/session_handler.ts";
 import { forceSameOrigin } from "./util/url.ts";
 
 export const requireAuth = async (
   handler: OnRequestWithAuth,
-  args: InitSessionHandlerArgs,
+  params: InitSessionHandlerParams,
 ): Promise<Response> => {
   const {
     cloudflare: { req, kv },
-    oidc: { clientId, clientSecret, baseUrl },
-  } = args;
+  } = params;
   const paths = getSessionPaths();
 
   const sessionStore = await getSessionStore(kv, req);
   const session = await sessionStore?.get();
-
-  // TODO: Move
-  const oidcConfiguration = await discovery(
-    new URL(baseUrl),
-    clientId,
-    clientSecret,
-  );
 
   const { pathname } = new URL(req.url);
   switch (pathname) {
@@ -48,7 +39,7 @@ export const requireAuth = async (
       const newSession = await createSessionStore(kv, req);
       return await oidcRequestHandler(req, {
         callbackPath: paths.callback,
-        openIdClientConfiguration: oidcConfiguration,
+        oidcParams: params.oidc,
         session: newSession,
       });
     }
@@ -57,7 +48,7 @@ export const requireAuth = async (
         return new Response("Session ID not found", { status: 400 });
       }
       return await oidcCallbackHandler(req, {
-        openIdClientConfiguration: oidcConfiguration,
+        oidcParams: params.oidc,
         sessionStore,
       });
     }

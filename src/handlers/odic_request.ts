@@ -4,11 +4,16 @@ import {
   calculatePKCECodeChallenge,
   randomPKCECodeVerifier,
 } from "openid-client";
+import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
 import type { SessionStoreInterface } from "../types/session.ts";
+import type {
+  InitSessionHandlerParams,
+  OidcParams,
+} from "../types/session_handler.ts";
 
 interface OdicRequestHandlerArgs {
-  openIdClientConfiguration: OpenIdClientConfiguration;
   callbackPath: string;
+  oidcParams: OidcParams;
   session: SessionStoreInterface;
   scope?: string[];
 }
@@ -18,7 +23,11 @@ export const oidcRequestHandler = async (
   args: OdicRequestHandlerArgs,
 ): Promise<Response> => {
   try {
-    const { callbackPath, openIdClientConfiguration, session } = args;
+    const {
+      callbackPath,
+      oidcParams: { baseUrl, clientId, clientSecret },
+      session,
+    } = args;
 
     const scope: string = Array.from(
       new Set([...(args.scope ?? []), "openid"]),
@@ -28,6 +37,11 @@ export const oidcRequestHandler = async (
     const code_verifier = randomPKCECodeVerifier();
     const code_challenge = await calculatePKCECodeChallenge(code_verifier);
 
+    const openIdClientConfiguration = await getOidcConfiguration({
+      baseUrl,
+      clientId,
+      clientSecret,
+    });
     const location: string = buildAuthorizationUrl(openIdClientConfiguration, {
       redirect_uri,
       scope,
