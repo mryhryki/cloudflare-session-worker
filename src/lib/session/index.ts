@@ -1,6 +1,10 @@
 import { parse, serialize } from "cookie";
 import { generateRandomHex } from "../random.ts";
-import type { SessionData, SessionInterface, SessionRecord } from "./types.ts";
+import type {
+  SessionData,
+  SessionRecord,
+  SessionStoreInterface,
+} from "./types.ts";
 
 interface SessionConfiguration {
   maxLifetimeSec: number;
@@ -17,7 +21,7 @@ export interface CloudflareKV {
   delete(key: string): Promise<void>;
 }
 
-export class Session implements SessionInterface {
+export class Session implements SessionStoreInterface {
   private static cookieName = "session";
 
   private static configuration: SessionConfiguration = {

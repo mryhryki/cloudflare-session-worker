@@ -1,4 +1,10 @@
+import type { KVNamespace } from "@cloudflare/workers-types";
 import { type SessionHandler, initSessionHandler } from "../src/index";
+
+interface Env extends Cloudflare.Env {
+  SESSION_STORE: KVNamespace;
+  [key: string]: unknown;
+}
 
 let sessionHandler: SessionHandler | null = null;
 const execSessionHandler = async (

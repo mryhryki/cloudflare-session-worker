@@ -1,3 +1,4 @@
+import type { KVNamespace } from "@cloudflare/workers-types";
 import { discovery } from "openid-client";
 import { getSessionPaths } from "./constants";
 import { oidcCallbackHandler } from "./handlers/odic_callback";
@@ -5,15 +6,17 @@ import { oidcRequestHandler } from "./handlers/odic_request";
 import { type CloudflareKV, Session } from "./lib/session/index.ts";
 import { isLocalhost } from "./util/request.ts";
 
-export type SessionHandler = (
+export type SessionHandler<ENV extends Cloudflare.Env = Cloudflare.Env> = (
   request: Request,
-  env: Env,
+  env: ENV,
   ctx: ExecutionContext,
 ) => Promise<Response>;
 
-export interface InitSessionHandlerArgs {
+export interface InitSessionHandlerArgs<
+  ENV extends Cloudflare.Env = Cloudflare.Env,
+> {
   cloudflare: {
-    kv: CloudflareKV;
+    kv: KVNamespace;
   };
   oidc: {
     clientId: string;
@@ -27,15 +30,17 @@ export interface InitSessionHandlerArgs {
   };
   onRequestWithValidSession: (
     request: Request,
-    env: Env,
+    env: ENV,
     ctx: ExecutionContext,
     user: Record<string, unknown>,
   ) => Promise<Response>;
 }
 
-export const initSessionHandler = async (
-  args: InitSessionHandlerArgs,
-): Promise<SessionHandler> => {
+export const initSessionHandler = async <
+  ENV extends Cloudflare.Env = Cloudflare.Env,
+>(
+  args: InitSessionHandlerArgs<ENV>,
+): Promise<SessionHandler<ENV>> => {
   const {
     cloudflare: { kv: cloudflareKv },
     onRequestWithValidSession,
@@ -49,7 +54,7 @@ export const initSessionHandler = async (
     clientSecret,
   );
 
-  return async (request, env, ctx) => {
+  return async (request: Request, env: ENV, ctx: ExecutionContext) => {
     const { pathname } = new URL(request.url);
     switch (pathname) {
       case paths.login:
