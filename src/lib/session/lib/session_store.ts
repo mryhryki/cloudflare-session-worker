@@ -7,7 +7,7 @@ import type {
   SessionStoreInterface,
   SessionStorePutFunction,
 } from "../../../types/session.ts";
-import { isLocalhost } from "../../../util/request.ts";
+import { isInLocalDevelopment } from "../../../util/request.ts";
 import { getNowUnixSec, isLive, toDate } from "../../../util/time.ts";
 import { deleteSessionCookie, setSessionCookie } from "../util/cookie.ts";
 
@@ -25,7 +25,7 @@ export const generateSessionStore = async (
   args: GenerateSessionStoreArgs,
 ): Promise<SessionStoreInterface> => {
   const { sessionId, kv, req, config } = args;
-  const isSecure = !isLocalhost(req);
+  const isSecure = !isInLocalDevelopment(req);
 
   let cachedRecord: SessionRecord | null = null;
   const getRecord = async (): Promise<SessionRecord | null> => {
