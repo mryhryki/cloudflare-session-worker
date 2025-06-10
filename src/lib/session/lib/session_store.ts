@@ -8,7 +8,7 @@ import type {
   SessionStorePutFunction,
 } from "../../../types/session.ts";
 import { isInLocalDevelopment } from "../../../util/request.ts";
-import { getNowUnixSec, isLive, toDate } from "../../../util/time.ts";
+import { getUnixSec, isAfter, toDate } from "../../../util/time.ts";
 import { deleteSessionCookie, setSessionCookie } from "../util/cookie.ts";
 
 interface GenerateSessionStoreArgs {
@@ -19,7 +19,7 @@ interface GenerateSessionStoreArgs {
 }
 
 const isLiveRecord = (record: SessionRecord): boolean =>
-  isLive(Math.min(record.expiration.absolute, record.expiration.idle));
+  isAfter(Math.min(record.expiration.absolute, record.expiration.idle));
 
 export const generateSessionStore = async (
   args: GenerateSessionStoreArgs,
@@ -44,7 +44,7 @@ export const generateSessionStore = async (
   };
 
   const put: SessionStorePutFunction = async (data, res) => {
-    const nowUnixSec = getNowUnixSec();
+    const nowUnixSec = getUnixSec();
     const absolute: number =
       (await getRecord())?.expiration?.absolute ??
       nowUnixSec + config.maxLifetimeSec;

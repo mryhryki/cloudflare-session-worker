@@ -20,7 +20,7 @@ describe("isInLocalDevelopment", () => {
     { url: "http://domain.example", expectResult: false },
   ];
   it.each(testValues)(
-    "should return the expect url",
+    "should return the expect result",
     ({ url, expectResult }) => {
       const request = new Request(new URL(url));
       expect(isInLocalDevelopment(request)).toEqual(expectResult);
