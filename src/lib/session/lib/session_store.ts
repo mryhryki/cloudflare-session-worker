@@ -7,9 +7,10 @@ import type {
   SessionStoreInterface,
   SessionStorePutFunction,
 } from "../../../types/session.ts";
-import { isLocalhost } from "../../../util/request.ts";
-import { getNowUnixSec, isLive, toDate } from "../../../util/time.ts";
-import { deleteSessionCookie, setSessionCookie } from "../util/cookie.ts";
+import { isInLocalDevelopment } from "../../../util/request.ts";
+import { getUnixSec, isAfter, toDate } from "../../../util/time.ts";
+import { deleteSessionCookie } from "../util/cookie/delete.ts";
+import { setSessionCookie } from "../util/cookie/set.ts";
 
 interface GenerateSessionStoreArgs {
   sessionId: string;
@@ -19,13 +20,13 @@ interface GenerateSessionStoreArgs {
 }
 
 const isLiveRecord = (record: SessionRecord): boolean =>
-  isLive(Math.min(record.expiration.absolute, record.expiration.idle));
+  isAfter(Math.min(record.expiration.absolute, record.expiration.idle));
 
 export const generateSessionStore = async (
   args: GenerateSessionStoreArgs,
 ): Promise<SessionStoreInterface> => {
   const { sessionId, kv, req, config } = args;
-  const isSecure = !isLocalhost(req);
+  const isSecure = !isInLocalDevelopment(req);
 
   let cachedRecord: SessionRecord | null = null;
   const getRecord = async (): Promise<SessionRecord | null> => {
@@ -44,7 +45,7 @@ export const generateSessionStore = async (
   };
 
   const put: SessionStorePutFunction = async (data, res) => {
-    const nowUnixSec = getNowUnixSec();
+    const nowUnixSec = getUnixSec();
     const absolute: number =
       (await getRecord())?.expiration?.absolute ??
       nowUnixSec + config.maxLifetimeSec;
