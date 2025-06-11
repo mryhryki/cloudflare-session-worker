@@ -6,3 +6,8 @@ export const generateSessionId = (): string => {
     .map((n: number): string => n.toString(16).padStart(2, "0"))
     .join("");
 };
+
+export const isValidSessionId = (sessionId: string): boolean => {
+  // TODO: Add unit tests
+  return /^[0-9a-f]{64,}$/.test(sessionId);
+};
