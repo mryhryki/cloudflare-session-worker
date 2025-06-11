@@ -1,7 +1,7 @@
 import type { GetSessionStore } from "../../types/session.ts";
-import { getSessionConfiguration } from "./lib/session_config.ts";
-import { generateSessionStore } from "./lib/session_store.ts";
-import { getSessionId } from "./util/cookie/get.ts";
+import { getSessionConfiguration } from "./config/session_config.ts";
+import { getSessionId } from "./cookie/get.ts";
+import { generateSessionStore } from "./session_store/session_store.ts";
 
 export const getSessionStore: GetSessionStore = async (kv, req, config) => {
   const sessionId = getSessionId(req);

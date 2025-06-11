@@ -9,8 +9,8 @@ import type {
 } from "../../../types/session.ts";
 import { isInLocalDevelopment } from "../../../util/request.ts";
 import { getUnixSec, isAfter, toDate } from "../../../util/time.ts";
-import { deleteSessionCookie } from "../util/cookie/delete.ts";
-import { setSessionCookie } from "../util/cookie/set.ts";
+import { deleteSessionCookie } from "../cookie/delete.ts";
+import { setSessionCookie } from "../cookie/set.ts";
 
 interface GenerateSessionStoreArgs {
   sessionId: string;

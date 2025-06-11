@@ -1,6 +1,6 @@
 import { parse } from "cookie";
 import { expect } from "vitest";
-import { isValidSessionId } from "../../../../util/session_id.ts";
+import { isValidSessionId } from "../../../util/session_id.ts";
 import { DefaultCookieName } from "./common.ts";
 
 export const getSessionId = (
