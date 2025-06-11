@@ -1,8 +1,8 @@
 import { getSessionPaths } from "./constants";
 import { oidcCallbackHandler } from "./handlers/odic_callback";
 import { oidcRequestHandler } from "./handlers/odic_request";
-import { createSessionStore } from "./lib/session/create.ts";
-import { getSessionStore } from "./lib/session/get.ts";
+import { createSessionStore } from "./lib/session_store/create.ts";
+import { getSessionStore } from "./lib/session_store/get.ts";
 import type {
   InitSessionHandlerParams,
   OnRequestWithAuth,
