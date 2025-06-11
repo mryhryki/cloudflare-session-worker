@@ -19,15 +19,20 @@ export const requireAuth = async (
   const paths = getSessionPaths();
 
   const sessionStore = await getSessionStore(kv, req);
-  const session = await sessionStore?.get();
 
-  const { pathname } = new URL(req.url);
+  const requestUrl = new URL(req.url);
+  const { pathname } = requestUrl;
+
   switch (pathname) {
     case paths.login: {
-      if (session != null) {
-        // TODO: Get redirect path from session and arguments
-        const pathname = session?.loginContext?.returnTo ?? "/";
-        const redirectUrl = forceSameOrigin(pathname, req.url);
+      const session = await sessionStore?.get();
+      if (session?.user != null) {
+        const redirectUrl = forceSameOrigin(
+          requestUrl.searchParams.get("returnTo") ??
+            session?.loginContext?.returnTo ??
+            "/",
+          requestUrl.origin,
+        );
         return new Response(`Redirect to: ${redirectUrl.toString()}`, {
           status: 307,
           headers: {
@@ -56,6 +61,7 @@ export const requireAuth = async (
       return new Response("TODO: Logout");
   }
 
+  const session = await sessionStore?.get();
   if (sessionStore == null || session == null || session?.user == null) {
     const loginUrl = new URL(paths.login, req.url);
     const { pathname: returnTo } = new URL(req.url);
