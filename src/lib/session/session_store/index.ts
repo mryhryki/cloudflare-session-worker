@@ -2,25 +2,23 @@ import type { KVNamespace } from "@cloudflare/workers-types";
 import type {
   SessionConfiguration,
   SessionRecord,
-  SessionStoreDeleteFunction,
   SessionStoreGetFunction,
   SessionStoreInterface,
   SessionStorePutFunction,
 } from "../../../types/session.ts";
 import { isInLocalDevelopment } from "../../../util/request.ts";
-import { getUnixSec, isAfter, toDate } from "../../../util/time.ts";
-import { deleteSessionCookie } from "../cookie/delete.ts";
+import { getUnixSec, toDate } from "../../../util/time.ts";
 import { setSessionCookie } from "../cookie/set.ts";
+import { validateSessionRecord } from "./common/validate.ts";
+import { generateDeleteSessionFunction } from "./delete.ts";
 
 interface GenerateSessionStoreArgs {
+  cookieName?: string;
   sessionId: string;
   kv: KVNamespace;
   req: Request;
   config: SessionConfiguration;
 }
-
-const isLiveRecord = (record: SessionRecord): boolean =>
-  isAfter(Math.min(record.expiration.absolute, record.expiration.idle));
 
 export const generateSessionStore = async (
   args: GenerateSessionStoreArgs,
@@ -36,24 +34,26 @@ export const generateSessionStore = async (
         return null;
       }
     }
-    // TODO: Validate
-    return isLiveRecord(cachedRecord) ? cachedRecord : null;
+    return validateSessionRecord(cachedRecord);
   };
 
-  const get: SessionStoreGetFunction = async () => {
+  const getSession: SessionStoreGetFunction = async () => {
     return (await getRecord())?.data ?? null;
   };
 
-  const put: SessionStorePutFunction = async (data, res) => {
+  const putSession: SessionStorePutFunction = async (data, res) => {
     const nowUnixSec = getUnixSec();
     const absolute: number =
       (await getRecord())?.expiration?.absolute ??
       nowUnixSec + config.maxLifetimeSec;
     const idle: number = nowUnixSec + config.idleLifetimeSec;
-    const record: SessionRecord = {
+    const record = validateSessionRecord({
       data,
       expiration: { absolute, idle },
-    };
+    });
+    if (record == null) {
+      throw new Error("Internal Error: Invalid session record");
+    }
     await kv.put(sessionId, JSON.stringify(record), {
       expiration: Math.min(absolute, idle),
     });
@@ -65,15 +65,9 @@ export const generateSessionStore = async (
     });
   };
 
-  const deleteFunc: SessionStoreDeleteFunction = async (
-    res: Response,
-  ): Promise<void> => {
-    await kv.delete(sessionId);
-    deleteSessionCookie(res, {
-      sessionId,
-      secure: isSecure,
-    });
+  return {
+    get: getSession,
+    put: putSession,
+    delete: generateDeleteSessionFunction({ sessionId, kv, req }),
   };
-
-  return { get, put, delete: deleteFunc };
 };
