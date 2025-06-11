@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { getSessionId } from "../lib/session/cookie/get.ts";
 import { generateSessionId, isValidSessionId } from "./session_id.ts";
 
 describe("generateSessionId", () => {

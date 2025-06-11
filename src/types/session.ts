@@ -9,13 +9,14 @@ export interface SessionData {
   user: UserInfoByIdToken | null;
 }
 
-// For internal use only
+export interface SessionExpiration {
+  absolute: number;
+  idle: number;
+}
+
 export interface SessionRecord {
   data: SessionData;
-  expiration: {
-    absolute: number;
-    idle: number;
-  };
+  expiration: SessionExpiration;
 }
 
 export type SessionStoreGetFunction = () => Promise<SessionData | null>;

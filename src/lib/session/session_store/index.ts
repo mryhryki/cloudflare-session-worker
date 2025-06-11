@@ -6,10 +6,10 @@ import type {
   SessionStorePutFunction,
 } from "../../../types/session.ts";
 import { isInLocalDevelopment } from "../../../util/request.ts";
-import { getUnixSec, toDate } from "../../../util/time.ts";
+import { toDate } from "../../../util/time.ts";
 import { setSessionCookie } from "../cookie/set.ts";
 import { generateGetRecordFunction } from "./common/get_record.ts";
-import { validateSessionRecord } from "./common/validate.ts";
+import { generatePutRecordFunction } from "./common/put_record.ts";
 import { generateDeleteSessionFunction } from "./delete.ts";
 
 interface GenerateSessionStoreArgs {
@@ -27,27 +27,20 @@ export const generateSessionStore = async (
   const isSecure = !isInLocalDevelopment(req);
 
   const getRecord = generateGetRecordFunction(kv);
+  const putRecord = generatePutRecordFunction({ kv, config });
 
   const getSession: SessionStoreGetFunction = async () => {
     return (await getRecord(sessionId))?.data ?? null;
   };
 
-  const putSession: SessionStorePutFunction = async (data, res) => {
-    const nowUnixSec = getUnixSec();
-    const absolute: number =
-      (await getRecord(sessionId))?.expiration?.absolute ??
-      nowUnixSec + config.maxLifetimeSec;
-    const idle: number = nowUnixSec + config.idleLifetimeSec;
-    const record = validateSessionRecord({
-      data,
-      expiration: { absolute, idle },
+  const putSession: SessionStorePutFunction = async (sessionData, res) => {
+    const sessionRecord = await getRecord(sessionId);
+    const savedRecord = await putRecord({
+      sessionId,
+      sessionData,
+      sessionRecord,
     });
-    if (record == null) {
-      throw new Error("Internal Error: Invalid session record");
-    }
-    await kv.put(sessionId, JSON.stringify(record), {
-      expiration: Math.min(absolute, idle),
-    });
+    const { absolute, idle } = savedRecord.expiration;
     setSessionCookie(res, {
       sessionId,
       secure: isSecure,
