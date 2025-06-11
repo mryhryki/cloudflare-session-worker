@@ -6,7 +6,7 @@ describe("generateSessionId", () => {
     const sessionIds: string[] = Array.from({ length: 30 }, generateSessionId);
 
     for (const sessionId of sessionIds) {
-      expect(sessionId).toMatch(/^[a-zA-Z0-9]{64}$/);
+      expect(sessionId).toMatch(/^[0-9a-f]{64}$/);
     }
 
     for (let i = 0; i < sessionIds.length; i++) {

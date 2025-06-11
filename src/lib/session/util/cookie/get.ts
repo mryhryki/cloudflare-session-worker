@@ -1,4 +1,5 @@
 import { parse } from "cookie";
+import { expect } from "vitest";
 import { DefaultCookieName } from "./common.ts";
 
 export const getSessionId = (
@@ -7,5 +8,15 @@ export const getSessionId = (
 ): string | null => {
   const cookieValue: string = request.headers.get("Cookie") ?? "";
   const cookies = parse(cookieValue);
-  return cookies[cookieName] ?? null;
+  const sessionId = cookies[cookieName];
+
+  if (typeof sessionId !== "string") {
+    return null;
+  }
+
+  if (/^[0-9a-f]{64,}$/.test(sessionId)) {
+    return sessionId;
+  }
+
+  return null;
 };
