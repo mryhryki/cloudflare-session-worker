@@ -8,6 +8,5 @@ export const generateSessionId = (): string => {
 };
 
 export const isValidSessionId = (sessionId: string): boolean => {
-  // TODO: Add unit tests
   return /^[0-9a-f]{64,}$/.test(sessionId);
 };

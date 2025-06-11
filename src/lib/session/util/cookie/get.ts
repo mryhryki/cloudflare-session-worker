@@ -1,5 +1,6 @@
 import { parse } from "cookie";
 import { expect } from "vitest";
+import { isValidSessionId } from "../../../../util/session_id.ts";
 import { DefaultCookieName } from "./common.ts";
 
 export const getSessionId = (
@@ -14,7 +15,7 @@ export const getSessionId = (
     return null;
   }
 
-  if (/^[0-9a-f]{64,}$/.test(sessionId)) {
+  if (isValidSessionId(sessionId)) {
     return sessionId;
   }
 
