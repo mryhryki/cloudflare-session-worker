@@ -1,7 +1,6 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 import type {
   SessionConfiguration,
-  SessionRecord,
   SessionStoreGetFunction,
   SessionStoreInterface,
   SessionStorePutFunction,
@@ -9,6 +8,7 @@ import type {
 import { isInLocalDevelopment } from "../../../util/request.ts";
 import { getUnixSec, toDate } from "../../../util/time.ts";
 import { setSessionCookie } from "../cookie/set.ts";
+import { generateGetRecordFunction } from "./common/get_record.ts";
 import { validateSessionRecord } from "./common/validate.ts";
 import { generateDeleteSessionFunction } from "./delete.ts";
 
@@ -26,25 +26,16 @@ export const generateSessionStore = async (
   const { sessionId, kv, req, config } = args;
   const isSecure = !isInLocalDevelopment(req);
 
-  let cachedRecord: SessionRecord | null = null;
-  const getRecord = async (): Promise<SessionRecord | null> => {
-    if (cachedRecord == null) {
-      cachedRecord = await kv.get<SessionRecord>(sessionId, "json");
-      if (cachedRecord == null) {
-        return null;
-      }
-    }
-    return validateSessionRecord(cachedRecord);
-  };
+  const getRecord = generateGetRecordFunction(kv);
 
   const getSession: SessionStoreGetFunction = async () => {
-    return (await getRecord())?.data ?? null;
+    return (await getRecord(sessionId))?.data ?? null;
   };
 
   const putSession: SessionStorePutFunction = async (data, res) => {
     const nowUnixSec = getUnixSec();
     const absolute: number =
-      (await getRecord())?.expiration?.absolute ??
+      (await getRecord(sessionId))?.expiration?.absolute ??
       nowUnixSec + config.maxLifetimeSec;
     const idle: number = nowUnixSec + config.idleLifetimeSec;
     const record = validateSessionRecord({
@@ -57,7 +48,6 @@ export const generateSessionStore = async (
     await kv.put(sessionId, JSON.stringify(record), {
       expiration: Math.min(absolute, idle),
     });
-    cachedRecord = record;
     setSessionCookie(res, {
       sessionId,
       secure: isSecure,
