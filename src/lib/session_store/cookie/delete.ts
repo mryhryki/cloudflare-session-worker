@@ -1,8 +1,8 @@
-import { type SerializeOptions, parse, serialize } from "cookie";
-import { BaseSerializeOptions, DefaultCookieName } from "./common.ts";
+import { serialize } from "cookie";
+import { BaseSerializeOptions } from "./common.ts";
 
 interface DeleteSessionCookieArgs {
-  cookieName?: string;
+  cookieName: string;
   sessionId: string;
   secure: boolean;
 }
@@ -11,7 +11,7 @@ export const deleteSessionCookie = (
   res: Response,
   args: DeleteSessionCookieArgs,
 ): void => {
-  const { cookieName = DefaultCookieName, sessionId, secure } = args;
+  const { cookieName, sessionId, secure } = args;
   const cookieValue = serialize(cookieName, sessionId, {
     ...BaseSerializeOptions,
     maxAge: 0,

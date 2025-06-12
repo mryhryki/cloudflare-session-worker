@@ -1,12 +1,11 @@
 /**
  * Date -> Unix timestamp in seconds
  *
- * @param {Date|undefined} date (Default: current date)
+ * @param {Date} date
  * @return {number} Unix timestamp in seconds
  */
-export const getUnixSec = (date?: Date): number => {
-  const now: Date = date ?? new Date();
-  return Math.floor(now.getTime() / 1000);
+export const getUnixSec = (date: Date): number => {
+  return Math.floor(date.getTime() / 1000);
 };
 
 /**
@@ -28,6 +27,6 @@ export const toDate = (unixSec: number): Date => {
  * @param {Date|undefined} baseDate (Default: current date)
  * @return {boolean} True if unixSec is after baseDate, false otherwise
  */
-export const isAfter = (unixSec: number, baseDate?: Date): boolean => {
+export const isAfter = (unixSec: number, baseDate: Date): boolean => {
   return getUnixSec(baseDate) < unixSec;
 };

@@ -3,7 +3,7 @@ import { deleteSessionCookie } from "./delete.ts";
 import { setSessionCookie } from "./set.ts";
 
 interface TestValue {
-  cookieName?: string;
+  cookieName: string;
   sessionId: string;
   secure: boolean;
   expires: Date;
@@ -16,6 +16,7 @@ describe("deleteSessionCookie()", () => {
 
   const testValues: TestValue[] = [
     {
+      cookieName: "session",
       sessionId:
         "795273192f271e9d3ef0659b4138715b57aeb876981486dea679de89368714c2",
       secure: true,
@@ -23,6 +24,7 @@ describe("deleteSessionCookie()", () => {
       expectedValue: `session=795273192f271e9d3ef0659b4138715b57aeb876981486dea679de89368714c2; Path=/; Expires=${Expires}; HttpOnly; Secure; SameSite=Lax`,
     },
     {
+      cookieName: "session",
       sessionId:
         "ba2022746d5af8f169340e39a37fa7911571f65dde630b0ab000b0c286d72c94",
       secure: false,

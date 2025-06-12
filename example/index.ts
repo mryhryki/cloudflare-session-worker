@@ -48,10 +48,7 @@ export default {
           // e.g. https://your-auth-domain.example
           baseUrl: getRequiredEnv("OIDC__BASE_URL"),
         },
-        secret: {
-          // e.g. `openssl rand -hex 32`
-          signingKey: getRequiredEnv("SECRET__SIGNING_KEY"),
-        },
+        session: undefined,
       },
     );
   },

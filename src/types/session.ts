@@ -9,13 +9,15 @@ export interface SessionData {
   user: UserInfoByIdToken | null;
 }
 
-// For internal use only
+export interface SessionExpiration {
+  absolute: number;
+  idle: number;
+}
+
 export interface SessionRecord {
+  id: string;
   data: SessionData;
-  expiration: {
-    absolute: number;
-    idle: number;
-  };
+  expiration: SessionExpiration;
 }
 
 export type SessionStoreGetFunction = () => Promise<SessionData | null>;
@@ -31,19 +33,29 @@ export interface SessionStoreInterface {
   delete: SessionStoreDeleteFunction;
 }
 
-export type CreateSessionStore = (
-  kv: KVNamespace,
-  req: Request,
-  config?: Partial<SessionConfiguration>,
-) => Promise<SessionStoreInterface>;
+interface GetSessionStoreArgs {
+  config: SessionConfiguration;
+  useSecureCookie: boolean;
+  kv: KVNamespace;
+  sessionId: string;
+}
 
 export type GetSessionStore = (
-  kv: KVNamespace,
-  req: Request,
-  config?: Partial<SessionConfiguration>,
-) => Promise<SessionStoreInterface | null>;
+  args: GetSessionStoreArgs,
+) => Promise<SessionStoreInterface>;
+
+interface CreateSessionStoreArgs {
+  config: SessionConfiguration;
+  useSecureCookie: boolean;
+  kv: KVNamespace;
+}
+
+export type CreateSessionStore = (
+  args: CreateSessionStoreArgs,
+) => Promise<SessionStoreInterface>;
 
 export interface SessionConfiguration {
+  cookieName: string;
   maxLifetimeSec: number;
   idleLifetimeSec: number;
 }
