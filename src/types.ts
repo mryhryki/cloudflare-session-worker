@@ -1,6 +1,8 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import type { SessionConfiguration } from "./session.ts";
-import type { UserInfoByIdToken } from "./user_info.ts";
+import type {
+  SessionConfiguration,
+  UserInfoByIdToken,
+} from "./lib/session_store/record/types.ts";
 
 export type OnRequestWithAuth = (user: UserInfoByIdToken) => Promise<Response>;
 

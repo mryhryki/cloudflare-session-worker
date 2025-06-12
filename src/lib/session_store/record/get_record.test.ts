@@ -1,7 +1,7 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 import { describe, expect, it } from "vitest";
-import type { SessionData, SessionRecord } from "../../../types/session.ts";
 import { generateGetRecordFunction } from "./get_record.ts";
+import type { SessionData, SessionRecord } from "./types.ts";
 
 describe("generateGetRecordFunction()", () => {
   const ExistsSessionId =

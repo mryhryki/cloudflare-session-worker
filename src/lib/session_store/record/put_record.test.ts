@@ -1,13 +1,13 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 import { beforeEach, describe, expect, it } from "vitest";
+import { getUnixSec } from "../../../util/time.ts";
+import { generateGetRecordFunction } from "./get_record.ts";
+import { generatePutRecordFunction } from "./put_record.ts";
 import type {
   SessionConfiguration,
   SessionData,
   SessionRecord,
-} from "../../../types/session.ts";
-import { getUnixSec } from "../../../util/time.ts";
-import { generateGetRecordFunction } from "./get_record.ts";
-import { generatePutRecordFunction } from "./put_record.ts";
+} from "./types.ts";
 
 describe("generatePutRecordFunction()", () => {
   const SessionId =

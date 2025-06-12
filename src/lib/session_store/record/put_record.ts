@@ -1,11 +1,11 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
+import { isValidSessionId } from "../../../util/session_id.ts";
+import { getUnixSec } from "../../../util/time.ts";
 import type {
   SessionConfiguration,
   SessionData,
   SessionRecord,
-} from "../../../types/session.ts";
-import { isValidSessionId } from "../../../util/session_id.ts";
-import { getUnixSec } from "../../../util/time.ts";
+} from "./types.ts";
 import { validateSessionRecord } from "./validate.ts";
 
 interface GeneratePutRecordArgs {

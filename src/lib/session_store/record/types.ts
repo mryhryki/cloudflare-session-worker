@@ -1,5 +1,13 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import type { UserInfoByIdToken } from "./user_info.ts";
+
+export interface UserInfoByIdToken {
+  iss?: string | undefined;
+  sub?: string | undefined;
+  aud?: string | string[] | undefined;
+  exp?: number | undefined;
+  iat?: number | undefined;
+  [key: string]: unknown;
+}
 
 export interface NotLoggedInSessionData {
   status: "not-logged-in";
