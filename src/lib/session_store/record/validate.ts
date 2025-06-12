@@ -6,7 +6,6 @@ export const validateSessionRecord = (
 ): SessionRecord | null => {
   // TODO: Validate
   const record = sessionRecord as SessionRecord;
-
   const isLive = isAfter(
     Math.min(record.expiration.absolute, record.expiration.idle),
   );

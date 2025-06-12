@@ -15,6 +15,7 @@ export interface SessionExpiration {
 }
 
 export interface SessionRecord {
+  id: string;
   data: SessionData;
   expiration: SessionExpiration;
 }
