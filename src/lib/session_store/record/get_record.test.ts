@@ -13,10 +13,10 @@ describe("generateGetRecordFunction()", () => {
 
   const nowUnixSec: number = Math.floor(new Date().getTime() / 1000);
   const BaseSessionData: SessionData = {
+    status: "not-logged-in",
     loginContext: {
       pkceVerifier: "abcd1234",
     },
-    user: null,
   };
 
   const kvMock: KVNamespace = {

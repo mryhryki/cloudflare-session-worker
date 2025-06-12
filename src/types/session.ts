@@ -1,13 +1,20 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 import type { UserInfoByIdToken } from "./user_info.ts";
 
-export interface SessionData {
+export interface NotLoggedInSessionData {
+  status: "not-logged-in";
   loginContext: {
     pkceVerifier: string;
     returnTo?: string | null | undefined;
-  } | null;
-  user: UserInfoByIdToken | null;
+  };
 }
+
+export interface LoggedInSessionData {
+  status: "logged-in";
+  user: UserInfoByIdToken;
+}
+
+export type SessionData = LoggedInSessionData | NotLoggedInSessionData;
 
 export interface SessionExpiration {
   absolute: number;

@@ -62,11 +62,11 @@ export const oidcRequestHandler = async (
 
     await session.put(
       {
+        status: "not-logged-in",
         loginContext: {
           pkceVerifier: code_verifier,
           returnTo,
         },
-        user: null,
       },
       response,
     );

@@ -6,6 +6,7 @@ import type {
   InitSessionHandlerParams,
   OidcParams,
 } from "../types/session_handler.ts";
+import { forceSameOrigin } from "../util/url.ts";
 
 interface OdicCallbackHandlerArgs {
   oidcParams: OidcParams;
@@ -22,7 +23,10 @@ export const oidcCallbackHandler = async (
   } = args;
   try {
     const session = await sessionStore.get();
-    const pkceCodeVerifier = session?.loginContext?.pkceVerifier;
+    const pkceCodeVerifier =
+      session?.status !== "not-logged-in"
+        ? null
+        : session?.loginContext?.pkceVerifier;
     if (typeof pkceCodeVerifier !== "string") {
       return new Response("PKCE code verifier not found in session", {
         status: 400,
@@ -54,15 +58,14 @@ export const oidcCallbackHandler = async (
       });
     }
 
-    let returnTo: URL = new URL(
-      session?.loginContext?.returnTo ?? "/",
+    const returnTo = forceSameOrigin(
+      session?.status === "not-logged-in"
+        ? (session?.loginContext?.returnTo ?? "/")
+        : "/",
       request.url,
     );
-    if (returnTo.origin !== new URL(request.url).origin) {
-      returnTo = new URL("/", request.url);
-    }
 
-    const response = new Response(`Redirect to: ${returnTo.toString()}`, {
+    const response = new Response(`Redirect to: ${returnTo}`, {
       status: 307,
       headers: {
         Location: returnTo.toString(),
@@ -71,7 +74,7 @@ export const oidcCallbackHandler = async (
     });
 
     const user = decodeJwt(id_token);
-    await sessionStore.put({ loginContext: null, user }, response);
+    await sessionStore.put({ status: "logged-in", user }, response);
 
     return response;
   } catch (err) {

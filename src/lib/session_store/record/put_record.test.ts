@@ -19,10 +19,10 @@ describe("generatePutRecordFunction()", () => {
   };
 
   const Data: SessionData = {
+    status: "not-logged-in",
     loginContext: {
       pkceVerifier: "abcd1234",
     },
-    user: null,
   };
 
   let latestArguments: unknown = null;

@@ -41,7 +41,7 @@ export const requireAuth = async (
   switch (pathname) {
     case paths.login: {
       const session = await sessionStore?.get();
-      if (session?.user != null) {
+      if (session?.status !== "logged-in") {
         const redirectUrl = forceSameOrigin(
           requestUrl.searchParams.get("returnTo") ??
             session?.loginContext?.returnTo ??
@@ -80,7 +80,11 @@ export const requireAuth = async (
   }
 
   const session = await sessionStore?.get();
-  if (sessionStore == null || session == null || session?.user == null) {
+  if (
+    sessionStore == null ||
+    session == null ||
+    session?.status !== "logged-in"
+  ) {
     const loginUrl = new URL(paths.login, req.url);
     const { pathname: returnTo } = new URL(req.url);
     loginUrl.searchParams.set("returnTo", returnTo);
