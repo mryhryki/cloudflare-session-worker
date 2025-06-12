@@ -1,4 +1,4 @@
-import { type SerializeOptions, parse, serialize } from "cookie";
+import { serialize } from "cookie";
 import { BaseSerializeOptions } from "./common.ts";
 
 interface SetSessionCookieArgs {

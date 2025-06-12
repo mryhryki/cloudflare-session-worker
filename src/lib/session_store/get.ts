@@ -4,7 +4,6 @@ import type {
   SessionStorePutFunction,
 } from "../../types/session.ts";
 import { toDate } from "../../util/time.ts";
-import { getSessionConfiguration } from "./config/session_config.ts";
 import { deleteSessionCookie } from "./cookie/delete.ts";
 import { setSessionCookie } from "./cookie/set.ts";
 import { generateGetRecordFunction } from "./record/get_record.ts";
