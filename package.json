@@ -17,7 +17,8 @@
   "dependencies": {
     "cookie": "1.0.2",
     "jose": "6.0.11",
-    "openid-client": "6.5.0"
+    "openid-client": "6.5.0",
+    "zod": "^3.25.63"
   },
   "peerDependencies": {
     "@cloudflare/workers-types": "^4.0.0"
