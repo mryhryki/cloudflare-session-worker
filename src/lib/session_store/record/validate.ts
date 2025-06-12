@@ -8,6 +8,7 @@ export const validateSessionRecord = (
   const record = sessionRecord as SessionRecord;
   const isLive = isAfter(
     Math.min(record.expiration.absolute, record.expiration.idle),
+    new Date(),
   );
   return isLive ? record : null;
 };
