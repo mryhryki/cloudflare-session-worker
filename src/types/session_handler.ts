@@ -1,4 +1,5 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
+import type { SessionConfiguration } from "./session.ts";
 import type { UserInfoByIdToken } from "./user_info.ts";
 
 export type OnRequestWithAuth = (user: UserInfoByIdToken) => Promise<Response>;
@@ -16,12 +17,8 @@ export interface OidcParams {
   baseUrl: string;
 }
 
-export interface SecretParams {
-  signingKey: string;
-}
-
 export interface InitSessionHandlerParams {
   cloudflare: CloudflareParams;
   oidc: OidcParams;
-  secret: SecretParams;
+  session?: Partial<SessionConfiguration>;
 }

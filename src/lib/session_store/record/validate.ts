@@ -1,5 +1,5 @@
-import type { SessionRecord } from "../../../../types/session.ts";
-import { isAfter } from "../../../../util/time.ts";
+import type { SessionRecord } from "../../../types/session.ts";
+import { isAfter } from "../../../util/time.ts";
 
 export const validateSessionRecord = (
   sessionRecord: unknown,

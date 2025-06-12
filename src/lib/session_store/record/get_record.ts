@@ -1,13 +1,21 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import type { SessionRecord } from "../../../../types/session.ts";
-import { isValidSessionId } from "../../../../util/session_id.ts";
+import type { SessionRecord } from "../../../types/session.ts";
+import { isValidSessionId } from "../../../util/session_id.ts";
 import { validateSessionRecord } from "./validate.ts";
 
-type GetRecordFunction = (sessionId: string) => Promise<SessionRecord | null>;
+interface GetRecordFunctionArgs {
+  kv: KVNamespace;
+}
+
+export type GetRecordFunction = (
+  sessionId: string,
+) => Promise<SessionRecord | null>;
 
 export const generateGetRecordFunction = (
-  kv: KVNamespace,
+  args: GetRecordFunctionArgs,
 ): GetRecordFunction => {
+  const { kv } = args;
+
   return async (sessionId: string): Promise<SessionRecord | null> => {
     if (!isValidSessionId(sessionId)) {
       return null;

@@ -1,18 +1,18 @@
 import { type SerializeOptions, parse, serialize } from "cookie";
-import { BaseSerializeOptions, DefaultCookieName } from "./common.ts";
+import { BaseSerializeOptions } from "./common.ts";
 
 interface SetSessionCookieArgs {
-  cookieName?: string;
-  sessionId: string;
-  secure: boolean;
+  cookieName: string;
   expires: Date;
+  secure: boolean;
+  sessionId: string;
 }
 
 export const setSessionCookie = (
   res: Response,
   args: SetSessionCookieArgs,
 ): void => {
-  const { cookieName = DefaultCookieName, sessionId, secure, expires } = args;
+  const { cookieName, sessionId, secure, expires } = args;
   const cookieValue = serialize(cookieName, sessionId, {
     ...BaseSerializeOptions,
     expires,

@@ -32,19 +32,29 @@ export interface SessionStoreInterface {
   delete: SessionStoreDeleteFunction;
 }
 
-export type CreateSessionStore = (
-  kv: KVNamespace,
-  req: Request,
-  config?: Partial<SessionConfiguration>,
-) => Promise<SessionStoreInterface>;
+interface GetSessionStoreArgs {
+  config: SessionConfiguration;
+  useSecureCookie: boolean;
+  kv: KVNamespace;
+  sessionId: string;
+}
 
 export type GetSessionStore = (
-  kv: KVNamespace,
-  req: Request,
-  config?: Partial<SessionConfiguration>,
-) => Promise<SessionStoreInterface | null>;
+  args: GetSessionStoreArgs,
+) => Promise<SessionStoreInterface>;
+
+interface CreateSessionStoreArgs {
+  config: SessionConfiguration;
+  useSecureCookie: boolean;
+  kv: KVNamespace;
+}
+
+export type CreateSessionStore = (
+  args: CreateSessionStoreArgs,
+) => Promise<SessionStoreInterface>;
 
 export interface SessionConfiguration {
+  cookieName: string;
   maxLifetimeSec: number;
   idleLifetimeSec: number;
 }

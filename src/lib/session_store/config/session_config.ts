@@ -1,6 +1,7 @@
 import type { SessionConfiguration } from "../../../types/session";
 
 const DefaultSessionConfiguration: SessionConfiguration = {
+  cookieName: "session",
   maxLifetimeSec: 7 * 86400, // 7 days
   idleLifetimeSec: 86400, // 1 day
 };

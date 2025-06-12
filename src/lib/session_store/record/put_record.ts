@@ -3,9 +3,9 @@ import type {
   SessionConfiguration,
   SessionData,
   SessionRecord,
-} from "../../../../types/session.ts";
-import { isValidSessionId } from "../../../../util/session_id.ts";
-import { getUnixSec } from "../../../../util/time.ts";
+} from "../../../types/session.ts";
+import { isValidSessionId } from "../../../util/session_id.ts";
+import { getUnixSec } from "../../../util/time.ts";
 import { validateSessionRecord } from "./validate.ts";
 
 interface GeneratePutRecordArgs {
@@ -18,7 +18,8 @@ interface PutRecordFunctionArgs {
   sessionData: SessionData;
   sessionRecord: SessionRecord | null;
 }
-type PutRecordFunction = (
+
+export type PutRecordFunction = (
   args: PutRecordFunctionArgs,
 ) => Promise<SessionRecord>;
 

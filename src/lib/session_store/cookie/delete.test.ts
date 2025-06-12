@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { deleteSessionCookie } from "./delete.ts";
 
 interface TestValue {
-  cookieName?: string;
+  cookieName: string;
   sessionId: string;
   secure: boolean;
   expectedValue: string;
@@ -11,6 +11,7 @@ interface TestValue {
 describe("deleteSessionCookie()", () => {
   const testValues: TestValue[] = [
     {
+      cookieName: "session",
       sessionId:
         "795273192f271e9d3ef0659b4138715b57aeb876981486dea679de89368714c2",
       secure: true,
@@ -18,6 +19,7 @@ describe("deleteSessionCookie()", () => {
         "session=795273192f271e9d3ef0659b4138715b57aeb876981486dea679de89368714c2; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax",
     },
     {
+      cookieName: "session",
       sessionId:
         "af673cf0fe165bf88e47c8a989f5ac1ca54cc5d6e02d06161dd332dada498961",
       secure: false,

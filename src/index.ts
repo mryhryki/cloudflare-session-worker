@@ -1,12 +1,17 @@
+import type { KVNamespace } from "@cloudflare/workers-types";
 import { getSessionPaths } from "./constants";
 import { oidcCallbackHandler } from "./handlers/odic_callback";
 import { oidcRequestHandler } from "./handlers/odic_request";
+import { getSessionConfiguration } from "./lib/session_store/config/session_config.ts";
+import { getSessionId } from "./lib/session_store/cookie/get.ts";
 import { createSessionStore } from "./lib/session_store/create.ts";
 import { getSessionStore } from "./lib/session_store/get.ts";
+import type { SessionConfiguration } from "./types/session.ts";
 import type {
   InitSessionHandlerParams,
   OnRequestWithAuth,
 } from "./types/session_handler.ts";
+import { isInLocalDevelopment } from "./util/request.ts";
 import { forceSameOrigin } from "./util/url.ts";
 
 export const requireAuth = async (
@@ -16,9 +21,19 @@ export const requireAuth = async (
   const {
     cloudflare: { req, kv },
   } = params;
+  const config = getSessionConfiguration(params.session ?? {});
   const paths = getSessionPaths();
 
-  const sessionStore = await getSessionStore(kv, req);
+  const sessionId = getSessionId(req, config.cookieName);
+  const sessionStore =
+    typeof sessionId === "string"
+      ? await getSessionStore({
+          config,
+          useSecureCookie: !isInLocalDevelopment(req),
+          kv,
+          sessionId,
+        })
+      : null;
 
   const requestUrl = new URL(req.url);
   const { pathname } = requestUrl;
@@ -41,14 +56,18 @@ export const requireAuth = async (
           },
         });
       }
-      const newSession = await createSessionStore(kv, req);
+      const newSession = await createSessionStore({
+        config,
+        useSecureCookie: !isInLocalDevelopment(req),
+        kv,
+      });
       return await oidcRequestHandler(req, {
         callbackPath: paths.callback,
         oidcParams: params.oidc,
         session: newSession,
       });
     }
-    case paths.callback: {
+    case paths.callback:
       if (sessionStore == null) {
         return new Response("Session ID not found", { status: 400 });
       }
@@ -56,7 +75,6 @@ export const requireAuth = async (
         oidcParams: params.oidc,
         sessionStore,
       });
-    }
     case paths.logout:
       return new Response("TODO: Logout");
   }
