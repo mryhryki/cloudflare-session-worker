@@ -2,6 +2,12 @@ import type { KVNamespace } from "@cloudflare/workers-types";
 
 export type OnRequestWithAuth = (user: UserInfoByIdToken) => Promise<Response>;
 
+export interface SessionPaths {
+  login: string;
+  callback: string;
+  logout: string;
+}
+
 export interface CloudflareParams {
   req: Request;
   kv: KVNamespace;

@@ -1,4 +1,5 @@
 import { getSessionPaths } from "./constants";
+import { LoginHandler, loginHandler } from "./handlers/login.ts";
 import { oidcCallbackHandler } from "./lib/oidc/odic_callback.ts";
 import { oidcRequestHandler } from "./lib/oidc/odic_request.ts";
 import { getSessionConfiguration } from "./lib/session_store/config/session_config.ts";
@@ -35,31 +36,12 @@ export const requireAuth = async (
 
   switch (pathname) {
     case paths.login: {
-      const session = await sessionStore?.get();
-      if (session?.status !== "logged-in") {
-        const redirectUrl = forceSameOrigin(
-          requestUrl.searchParams.get("returnTo") ??
-            session?.loginContext?.returnTo ??
-            "/",
-          requestUrl.origin,
-        );
-        return new Response(`Redirect to: ${redirectUrl.toString()}`, {
-          status: 307,
-          headers: {
-            Location: redirectUrl.toString(),
-            "Content-Type": "text/plain",
-          },
-        });
-      }
-      const newSession = await createSessionStore({
+      return await loginHandler({
         config,
-        useSecureCookie: !isInLocalDevelopment(req),
         kv,
-      });
-      return await oidcRequestHandler(req, {
-        callbackPath: paths.callback,
         oidcParams: params.oidc,
-        session: newSession,
+        paths,
+        req,
       });
     }
     case paths.callback:
