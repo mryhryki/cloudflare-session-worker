@@ -1,6 +1,6 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
+import type { SessionRecord } from "../../../types.ts";
 import { isValidSessionId } from "../../../util/session_id.ts";
-import type { SessionRecord } from "./types.ts";
 import { validateSessionRecord } from "./validate.ts";
 
 interface GetRecordFunctionArgs {

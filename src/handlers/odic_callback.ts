@@ -1,8 +1,7 @@
 import { decodeJwt } from "jose";
 import { authorizationCodeGrant } from "openid-client";
 import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
-import type { SessionStoreInterface } from "../lib/session_store/record/types.ts";
-import type { InitSessionHandlerParams, OidcParams } from "../types.ts";
+import type { OidcParams, SessionStoreInterface } from "../types.ts";
 import { forceSameOrigin } from "../util/url.ts";
 
 interface OdicCallbackHandlerArgs {

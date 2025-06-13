@@ -1,4 +1,3 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
 import { getSessionPaths } from "./constants";
 import { oidcCallbackHandler } from "./handlers/odic_callback";
 import { oidcRequestHandler } from "./handlers/odic_request";
@@ -6,7 +5,6 @@ import { getSessionConfiguration } from "./lib/session_store/config/session_conf
 import { getSessionId } from "./lib/session_store/cookie/get.ts";
 import { createSessionStore } from "./lib/session_store/create.ts";
 import { getSessionStore } from "./lib/session_store/get.ts";
-import type { SessionConfiguration } from "./lib/session_store/record/types.ts";
 import type { InitSessionHandlerParams, OnRequestWithAuth } from "./types.ts";
 import { isInLocalDevelopment } from "./util/request.ts";
 import { forceSameOrigin } from "./util/url.ts";

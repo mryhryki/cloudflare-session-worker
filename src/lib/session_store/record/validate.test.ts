@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { generateSessionId } from "../../../util/session_id.ts";
 import type {
   LoggedInSessionData,
   NotLoggedInSessionData,
   SessionExpiration,
-  SessionRecord,
-} from "./types.ts";
+} from "../../../types.ts";
+import { generateSessionId } from "../../../util/session_id.ts";
 import { validateSessionRecord } from "./validate.ts";
 
 describe("validateSessionRecord()", () => {
