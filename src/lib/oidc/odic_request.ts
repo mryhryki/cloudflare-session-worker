@@ -3,8 +3,8 @@ import {
   calculatePKCECodeChallenge,
   randomPKCECodeVerifier,
 } from "openid-client";
-import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
-import type { OidcParams, SessionStoreInterface } from "../types.ts";
+import type { OidcParams, SessionStoreInterface } from "../../types.ts";
+import { getOidcConfiguration } from "./configucation.ts";
 
 interface OdicRequestHandlerArgs {
   callbackPath: string;

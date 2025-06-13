@@ -16,6 +16,18 @@ describe("getSessionConfiguration", () => {
     {
       argument: {},
       expectedResult: {
+        defaultReturnTo: "/",
+        cookieName: DefaultCookieName,
+        maxLifetimeSec: DefaultMaxLifetimeSec,
+        idleLifetimeSec: DefaultIdleLifetimeSec,
+      },
+    },
+    {
+      argument: {
+        defaultReturnTo: "/home",
+      },
+      expectedResult: {
+        defaultReturnTo: "/home",
         cookieName: DefaultCookieName,
         maxLifetimeSec: DefaultMaxLifetimeSec,
         idleLifetimeSec: DefaultIdleLifetimeSec,
@@ -26,6 +38,7 @@ describe("getSessionConfiguration", () => {
         cookieName: "session-id",
       },
       expectedResult: {
+        defaultReturnTo: "/",
         cookieName: "session-id",
         maxLifetimeSec: DefaultMaxLifetimeSec,
         idleLifetimeSec: DefaultIdleLifetimeSec,
@@ -36,6 +49,7 @@ describe("getSessionConfiguration", () => {
         idleLifetimeSec: 12345,
       },
       expectedResult: {
+        defaultReturnTo: "/",
         cookieName: DefaultCookieName,
         maxLifetimeSec: DefaultMaxLifetimeSec,
         idleLifetimeSec: 12345,
@@ -46,6 +60,7 @@ describe("getSessionConfiguration", () => {
         maxLifetimeSec: 23456,
       },
       expectedResult: {
+        defaultReturnTo: "/",
         cookieName: DefaultCookieName,
         maxLifetimeSec: 23456,
         idleLifetimeSec: DefaultIdleLifetimeSec,
@@ -53,11 +68,13 @@ describe("getSessionConfiguration", () => {
     },
     {
       argument: {
+        defaultReturnTo: "/home",
         cookieName: "custom-name",
         idleLifetimeSec: 12345,
         maxLifetimeSec: 23456,
       },
       expectedResult: {
+        defaultReturnTo: "/home",
         cookieName: "custom-name",
         maxLifetimeSec: 23456,
         idleLifetimeSec: 12345,

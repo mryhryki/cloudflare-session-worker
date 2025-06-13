@@ -8,6 +8,7 @@ describe("generatePutRecordFunction()", () => {
   const SessionId =
     "bf0a9e354aa03f09f9db02c132a290095bc7391949a58f71826b91cc76221fef";
   const Config: SessionConfiguration = {
+    defaultReturnTo: "/",
     cookieName: "session",
     maxLifetimeSec: 1000,
     idleLifetimeSec: 200,
