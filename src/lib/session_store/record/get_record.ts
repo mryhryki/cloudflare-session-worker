@@ -24,6 +24,6 @@ export const generateGetRecordFunction = (
     if (record == null) {
       return null;
     }
-    return validateSessionRecord(record);
+    return validateSessionRecord(record, new Date());
   };
 };
