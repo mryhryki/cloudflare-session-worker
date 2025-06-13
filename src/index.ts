@@ -1,4 +1,5 @@
 import { getSessionPaths } from "./constants";
+import { callbackHandler } from "./handlers/callback.ts";
 import { LoginHandler, loginHandler } from "./handlers/login.ts";
 import { oidcCallbackHandler } from "./lib/oidc/odic_callback.ts";
 import { oidcRequestHandler } from "./lib/oidc/odic_request.ts";
@@ -16,9 +17,22 @@ export const requireAuth = async (
 ): Promise<Response> => {
   const {
     cloudflare: { req, kv },
+    oidc: oidcParams,
   } = params;
   const config = getSessionConfiguration(params.session ?? {});
   const paths = getSessionPaths();
+
+  const requestUrl = new URL(req.url);
+  const { pathname } = requestUrl;
+
+  switch (pathname) {
+    case paths.login:
+      return await loginHandler({ config, kv, oidcParams, paths, req });
+    case paths.callback:
+      return await callbackHandler({ config, kv, oidcParams, req });
+    case paths.logout:
+      return new Response("TODO: Logout");
+  }
 
   const sessionId = getSessionId(req, config.cookieName);
   const sessionStore =
@@ -30,31 +44,6 @@ export const requireAuth = async (
           sessionId,
         })
       : null;
-
-  const requestUrl = new URL(req.url);
-  const { pathname } = requestUrl;
-
-  switch (pathname) {
-    case paths.login: {
-      return await loginHandler({
-        config,
-        kv,
-        oidcParams: params.oidc,
-        paths,
-        req,
-      });
-    }
-    case paths.callback:
-      if (sessionStore == null) {
-        return new Response("Session ID not found", { status: 400 });
-      }
-      return await oidcCallbackHandler(req, {
-        oidcParams: params.oidc,
-        sessionStore,
-      });
-    case paths.logout:
-      return new Response("TODO: Logout");
-  }
 
   const session = await sessionStore?.get();
   if (
