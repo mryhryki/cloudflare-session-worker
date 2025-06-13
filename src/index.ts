@@ -1,4 +1,3 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
 import { getSessionPaths } from "./constants";
 import { oidcCallbackHandler } from "./handlers/odic_callback";
 import { oidcRequestHandler } from "./handlers/odic_request";
@@ -6,11 +5,7 @@ import { getSessionConfiguration } from "./lib/session_store/config/session_conf
 import { getSessionId } from "./lib/session_store/cookie/get.ts";
 import { createSessionStore } from "./lib/session_store/create.ts";
 import { getSessionStore } from "./lib/session_store/get.ts";
-import type { SessionConfiguration } from "./types/session.ts";
-import type {
-  InitSessionHandlerParams,
-  OnRequestWithAuth,
-} from "./types/session_handler.ts";
+import type { InitSessionHandlerParams, OnRequestWithAuth } from "./types.ts";
 import { isInLocalDevelopment } from "./util/request.ts";
 import { forceSameOrigin } from "./util/url.ts";
 
@@ -41,7 +36,7 @@ export const requireAuth = async (
   switch (pathname) {
     case paths.login: {
       const session = await sessionStore?.get();
-      if (session?.user != null) {
+      if (session?.status !== "logged-in") {
         const redirectUrl = forceSameOrigin(
           requestUrl.searchParams.get("returnTo") ??
             session?.loginContext?.returnTo ??
@@ -80,7 +75,11 @@ export const requireAuth = async (
   }
 
   const session = await sessionStore?.get();
-  if (sessionStore == null || session == null || session?.user == null) {
+  if (
+    sessionStore == null ||
+    session == null ||
+    session?.status !== "logged-in"
+  ) {
     const loginUrl = new URL(paths.login, req.url);
     const { pathname: returnTo } = new URL(req.url);
     loginUrl.searchParams.set("returnTo", returnTo);

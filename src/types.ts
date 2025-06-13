@@ -1,13 +1,49 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import type { UserInfoByIdToken } from "./user_info.ts";
 
-export interface SessionData {
+export type OnRequestWithAuth = (user: UserInfoByIdToken) => Promise<Response>;
+
+export interface CloudflareParams {
+  req: Request;
+  kv: KVNamespace;
+}
+
+export interface OidcParams {
+  clientId: string;
+  clientSecret: string;
+  // e.g.
+  // - Amazon Cognito: https://cognito-idp.{region}.amazonaws.com/{region}_{random}
+  baseUrl: string;
+}
+
+export interface InitSessionHandlerParams {
+  cloudflare: CloudflareParams;
+  oidc: OidcParams;
+  session?: Partial<SessionConfiguration>;
+}
+
+export interface UserInfoByIdToken {
+  iss?: string | undefined;
+  sub?: string | undefined;
+  aud?: string | string[] | undefined;
+  exp?: number | undefined;
+  iat?: number | undefined;
+  [key: string]: unknown;
+}
+
+export interface NotLoggedInSessionData {
+  status: "not-logged-in";
   loginContext: {
     pkceVerifier: string;
     returnTo?: string | null | undefined;
-  } | null;
-  user: UserInfoByIdToken | null;
+  };
 }
+
+export interface LoggedInSessionData {
+  status: "logged-in";
+  user: UserInfoByIdToken;
+}
+
+export type SessionData = LoggedInSessionData | NotLoggedInSessionData;
 
 export interface SessionExpiration {
   absolute: number;

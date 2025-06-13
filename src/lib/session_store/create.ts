@@ -1,4 +1,4 @@
-import type { CreateSessionStore } from "../../types/session.ts";
+import type { CreateSessionStore } from "../../types.ts";
 import { generateSessionId } from "../../util/session_id.ts";
 import { getSessionStore } from "./get.ts";
 

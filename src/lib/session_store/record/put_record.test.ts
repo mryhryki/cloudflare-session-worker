@@ -1,12 +1,7 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 import { beforeEach, describe, expect, it } from "vitest";
-import type {
-  SessionConfiguration,
-  SessionData,
-  SessionRecord,
-} from "../../../types/session.ts";
+import type { SessionConfiguration, SessionData } from "../../../types.ts";
 import { getUnixSec } from "../../../util/time.ts";
-import { generateGetRecordFunction } from "./get_record.ts";
 import { generatePutRecordFunction } from "./put_record.ts";
 
 describe("generatePutRecordFunction()", () => {
@@ -19,10 +14,10 @@ describe("generatePutRecordFunction()", () => {
   };
 
   const Data: SessionData = {
+    status: "not-logged-in",
     loginContext: {
       pkceVerifier: "abcd1234",
     },
-    user: null,
   };
 
   let latestArguments: unknown = null;

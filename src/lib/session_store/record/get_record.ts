@@ -1,5 +1,5 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import type { SessionRecord } from "../../../types/session.ts";
+import type { SessionRecord } from "../../../types.ts";
 import { isValidSessionId } from "../../../util/session_id.ts";
 import { validateSessionRecord } from "./validate.ts";
 
@@ -24,6 +24,6 @@ export const generateGetRecordFunction = (
     if (record == null) {
       return null;
     }
-    return validateSessionRecord(record);
+    return validateSessionRecord(record, new Date());
   };
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SessionConfiguration } from "../../../types/session.ts";
+import type { SessionConfiguration } from "../../../types.ts";
 import { getSessionConfiguration } from "./session_config.ts";
 
 interface TestValue {

@@ -1,4 +1,4 @@
-import type { SessionConfiguration } from "../../../types/session";
+import type { SessionConfiguration } from "../../../types.ts";
 
 const DefaultSessionConfiguration: SessionConfiguration = {
   cookieName: "session",

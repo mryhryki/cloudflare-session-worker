@@ -1,15 +1,10 @@
 import {
-  type Configuration as OpenIdClientConfiguration,
   buildAuthorizationUrl,
   calculatePKCECodeChallenge,
   randomPKCECodeVerifier,
 } from "openid-client";
 import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
-import type { SessionStoreInterface } from "../types/session.ts";
-import type {
-  InitSessionHandlerParams,
-  OidcParams,
-} from "../types/session_handler.ts";
+import type { OidcParams, SessionStoreInterface } from "../types.ts";
 
 interface OdicRequestHandlerArgs {
   callbackPath: string;
@@ -62,11 +57,11 @@ export const oidcRequestHandler = async (
 
     await session.put(
       {
+        status: "not-logged-in",
         loginContext: {
           pkceVerifier: code_verifier,
           returnTo,
         },
-        user: null,
       },
       response,
     );

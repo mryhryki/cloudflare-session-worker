@@ -1,6 +1,6 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 import { describe, expect, it } from "vitest";
-import type { SessionData, SessionRecord } from "../../../types/session.ts";
+import type { SessionData } from "../../../types.ts";
 import { generateGetRecordFunction } from "./get_record.ts";
 
 describe("generateGetRecordFunction()", () => {
@@ -13,10 +13,10 @@ describe("generateGetRecordFunction()", () => {
 
   const nowUnixSec: number = Math.floor(new Date().getTime() / 1000);
   const BaseSessionData: SessionData = {
+    status: "not-logged-in",
     loginContext: {
       pkceVerifier: "abcd1234",
     },
-    user: null,
   };
 
   const kvMock: KVNamespace = {

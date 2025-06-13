@@ -1,14 +1,20 @@
-import type { SessionRecord } from "../../../types/session.ts";
+import type { SessionRecord } from "../../../types.ts";
 import { isAfter } from "../../../util/time.ts";
+import { SessionRecordSchema } from "./schema.ts";
 
 export const validateSessionRecord = (
   sessionRecord: unknown,
+  baseDate: Date,
 ): SessionRecord | null => {
-  // TODO: Validate
-  const record = sessionRecord as SessionRecord;
+  const result = SessionRecordSchema.safeParse(sessionRecord);
+  if (!result.success) {
+    return null;
+  }
+
+  const record: SessionRecord = result.data;
   const isLive = isAfter(
     Math.min(record.expiration.absolute, record.expiration.idle),
-    new Date(),
+    baseDate,
   );
   return isLive ? record : null;
 };

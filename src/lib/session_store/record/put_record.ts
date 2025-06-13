@@ -3,10 +3,9 @@ import type {
   SessionConfiguration,
   SessionData,
   SessionRecord,
-} from "../../../types/session.ts";
+} from "../../../types.ts";
 import { isValidSessionId } from "../../../util/session_id.ts";
 import { getUnixSec } from "../../../util/time.ts";
-import { validateSessionRecord } from "./validate.ts";
 
 interface GeneratePutRecordArgs {
   kv: KVNamespace;

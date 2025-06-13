@@ -2,7 +2,7 @@ import type {
   GetSessionStore,
   SessionStoreGetFunction,
   SessionStorePutFunction,
-} from "../../types/session.ts";
+} from "../../types.ts";
 import { toDate } from "../../util/time.ts";
 import { deleteSessionCookie } from "./cookie/delete.ts";
 import { setSessionCookie } from "./cookie/set.ts";
