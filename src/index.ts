@@ -1,6 +1,6 @@
 import { getSessionPaths } from "./constants";
-import { oidcCallbackHandler } from "./handlers/odic_callback";
-import { oidcRequestHandler } from "./handlers/odic_request";
+import { oidcCallbackHandler } from "./lib/oidc/odic_callback.ts";
+import { oidcRequestHandler } from "./lib/oidc/odic_request.ts";
 import { getSessionConfiguration } from "./lib/session_store/config/session_config.ts";
 import { getSessionId } from "./lib/session_store/cookie/get.ts";
 import { createSessionStore } from "./lib/session_store/create.ts";
