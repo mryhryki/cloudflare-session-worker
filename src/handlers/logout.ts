@@ -1,4 +1,5 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
+import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
 import { oidcRequestHandler } from "../lib/oidc/odic_request.ts";
 import { getSessionId } from "../lib/session_store/cookie/get.ts";
 import { createSessionStore } from "../lib/session_store/create.ts";
@@ -15,14 +16,24 @@ interface LoginHandlerArgs {
   config: SessionConfiguration;
   kv: KVNamespace;
   oidcParams: OidcParams;
-  paths: SessionPaths;
   req: Request;
 }
 
-export const loginHandler = async (
+export const logoutHandler = async (
   args: LoginHandlerArgs,
 ): Promise<Response> => {
-  const { req, config, kv, paths, oidcParams } = args;
+  const { req, config, kv, oidcParams } = args;
+
+  const oidcConfiguration = await getOidcConfiguration(oidcParams);
+  const { end_session_endpoint: endSessionEndpoint } =
+    oidcConfiguration.serverMetadata();
+  const redirectTo =
+    endSessionEndpoint ?? forceSameOrigin(config.defaultReturnTo, req.url);
+
+  const response = new Response(`Redirect to: ${redirectTo}`, {
+    status: 307,
+    headers: { Location: redirectTo },
+  });
 
   const sessionId = getSessionId(req, config.cookieName);
   if (typeof sessionId === "string") {
@@ -32,26 +43,8 @@ export const loginHandler = async (
       kv,
       sessionId,
     });
-
-    const session = await sessionStore.get();
-    if (session?.status === "logged-in") {
-      const location = forceSameOrigin(config.defaultReturnTo, req.url);
-      return new Response(`Redirect to: ${location}`, {
-        status: 307,
-        headers: { Location: location },
-      });
-    }
+    await sessionStore.delete(response);
   }
 
-  const newSession = await createSessionStore({
-    config,
-    useSecureCookie: !isInLocalDevelopment(req),
-    kv,
-  });
-
-  return await oidcRequestHandler(req, {
-    callbackPath: paths.callback,
-    oidcParams,
-    session: newSession,
-  });
+  return response;
 };

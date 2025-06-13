@@ -2,6 +2,7 @@ import { getSessionPaths } from "./constants";
 import { callbackHandler } from "./handlers/callback.ts";
 import { defaultHandler } from "./handlers/default.ts";
 import { loginHandler } from "./handlers/login.ts";
+import { logoutHandler } from "./handlers/logout.ts";
 import { getSessionConfiguration } from "./lib/session_store/config/session_config.ts";
 import type { InitSessionHandlerParams, OnRequestWithAuth } from "./types.ts";
 
@@ -23,7 +24,7 @@ export const requireAuth = async (
     case paths.callback:
       return await callbackHandler({ config, kv, oidcParams, req });
     case paths.logout:
-      return new Response("TODO: Logout");
+      return await logoutHandler({ config, kv, oidcParams, req });
     default:
       return await defaultHandler(handler, { config, kv, paths, req });
   }

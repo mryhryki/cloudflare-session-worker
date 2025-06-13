@@ -97,6 +97,7 @@ export type CreateSessionStore = (
 ) => Promise<SessionStoreInterface>;
 
 export interface SessionConfiguration {
+  defaultReturnTo: string;
   cookieName: string;
   maxLifetimeSec: number;
   idleLifetimeSec: number;
