@@ -13,6 +13,19 @@ interface LoginHandlerArgs {
   req: Request;
 }
 
+const getDefaultErrorResponse = (
+  returnTo: string,
+  requestUrl: string,
+): Response => {
+  return new Response(null, {
+    status: 307,
+    headers: {
+      Location: forceSameOrigin(returnTo, requestUrl),
+      "Content-Type": "text/plan",
+    },
+  });
+};
+
 export const logoutHandler = async (
   args: LoginHandlerArgs,
 ): Promise<Response> => {
@@ -23,15 +36,9 @@ export const logoutHandler = async (
     oidcParams: { clientId, clientSecret, baseUrl, postLogoutRedirectUri },
   } = args;
 
-  const defaultReturnTo = forceSameOrigin(config.defaultReturnTo, req.url);
-  const defaultResponse = new Response(`Redirect to ${defaultReturnTo}`, {
-    status: 307,
-    headers: { Location: defaultReturnTo, "Content-Type": "text/plan" },
-  });
-
   const sessionId = getSessionId(req, config.cookieName);
   if (typeof sessionId !== "string") {
-    return defaultResponse;
+    return getDefaultErrorResponse(config.defaultReturnTo, req.url);
   }
 
   const sessionStore = await getSessionStore({
@@ -42,7 +49,7 @@ export const logoutHandler = async (
   });
   const session = await sessionStore.get();
   if (session?.status !== "logged-in") {
-    return defaultResponse;
+    return getDefaultErrorResponse(config.defaultReturnTo, req.url);
   }
 
   const response = await oidcLogoutHandler({
