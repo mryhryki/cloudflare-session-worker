@@ -46,6 +46,7 @@ export interface NotLoggedInSessionData {
 
 export interface LoggedInSessionData {
   status: "logged-in";
+  idToken: string;
   user: UserInfoByIdToken;
 }
 

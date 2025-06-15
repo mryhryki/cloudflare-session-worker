@@ -10,6 +10,7 @@ const NotLoggedInSessionDataSchema = z.object({
 
 const LoggedInSessionDataSchema = z.object({
   status: z.literal("logged-in"),
+  idToken: z.string(),
   user: z
     .object({
       iss: z.string().optional(),

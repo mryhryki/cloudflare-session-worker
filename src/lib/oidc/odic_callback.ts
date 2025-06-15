@@ -37,7 +37,7 @@ export const oidcCallbackHandler = async (
       clientId,
       clientSecret,
     });
-    const { id_token } = await authorizationCodeGrant(
+    const { id_token: idToken } = await authorizationCodeGrant(
       openIdClientConfiguration,
       new URL(request.url),
       {
@@ -45,7 +45,7 @@ export const oidcCallbackHandler = async (
       },
     );
 
-    if (typeof id_token !== "string") {
+    if (typeof idToken !== "string") {
       return new Response("ID token not found in authorization response", {
         status: 400,
         headers: {
@@ -69,8 +69,8 @@ export const oidcCallbackHandler = async (
       },
     });
 
-    const user = decodeJwt(id_token);
-    await sessionStore.put({ status: "logged-in", user }, response);
+    const user = decodeJwt(idToken);
+    await sessionStore.put({ status: "logged-in", idToken, user }, response);
 
     return response;
   } catch (err) {

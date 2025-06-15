@@ -20,6 +20,7 @@ describe("validateSessionRecord()", () => {
   };
   const loggedInSessionData: LoggedInSessionData = {
     status: "logged-in",
+    idToken: "pseudo-id-token",
     user: {
       iss: "https://issuer.example",
       sub: "35b456ff-535f-4eba-a029-adda9dad7dbb",
