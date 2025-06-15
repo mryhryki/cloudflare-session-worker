@@ -22,7 +22,13 @@ interface LoginHandlerArgs {
 export const loginHandler = async (
   args: LoginHandlerArgs,
 ): Promise<Response> => {
-  const { req, config, kv, paths, oidcParams } = args;
+  const {
+    req,
+    config,
+    kv,
+    paths,
+    oidcParams: { clientId, clientSecret, baseUrl },
+  } = args;
 
   const sessionId = getSessionId(req, config.cookieName);
   if (typeof sessionId === "string") {
@@ -49,10 +55,27 @@ export const loginHandler = async (
     kv,
   });
 
-  return await oidcRequestHandler({
+  const { response, values } = await oidcRequestHandler({
     requestUrl: req.url,
     callbackPath: paths.callback,
-    oidcParams,
-    sessionStore: newSessionStore,
+    clientId,
+    clientSecret,
+    baseUrl,
   });
+
+  if (values != null) {
+    const { pkceCodeVerifier } = values;
+    await newSessionStore.put(
+      {
+        status: "not-logged-in",
+        loginContext: {
+          pkceCodeVerifier,
+          returnTo: new URL(req.url).searchParams.get("returnTo") ?? null,
+        },
+      },
+      response,
+    );
+  }
+
+  return response;
 };
