@@ -19,6 +19,7 @@ export interface OidcParams {
   // e.g.
   // - Amazon Cognito: https://cognito-idp.{region}.amazonaws.com/{region}_{random}
   baseUrl: string;
+  postLogoutRedirectUri: string;
 }
 
 export interface InitSessionHandlerParams {

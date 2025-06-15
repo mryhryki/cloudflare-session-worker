@@ -1,5 +1,5 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
+import { oidcLogoutHandler } from "../lib/oidc/odic_logout.ts";
 import { getSessionId } from "../lib/session_store/cookie/get.ts";
 import { getSessionStore } from "../lib/session_store/get.ts";
 import type { OidcParams, SessionConfiguration } from "../types.ts";
@@ -16,7 +16,12 @@ interface LoginHandlerArgs {
 export const logoutHandler = async (
   args: LoginHandlerArgs,
 ): Promise<Response> => {
-  const { req, config, kv, oidcParams } = args;
+  const {
+    req,
+    config,
+    kv,
+    oidcParams: { clientId, clientSecret, baseUrl, postLogoutRedirectUri },
+  } = args;
 
   const defaultReturnTo = forceSameOrigin(config.defaultReturnTo, req.url);
   const defaultResponse = new Response(`Redirect to ${defaultReturnTo}`, {
@@ -40,19 +45,12 @@ export const logoutHandler = async (
     return defaultResponse;
   }
 
-  const oidcConfiguration = await getOidcConfiguration(oidcParams);
-  const { end_session_endpoint } = oidcConfiguration.serverMetadata();
-  if (typeof end_session_endpoint !== "string") {
-    return defaultResponse;
-  }
-
-  const url = new URL(end_session_endpoint);
-  url.searchParams.set("id_token_hint", session.idToken);
-  const redirectTo = url.href;
-
-  const response = new Response(`Redirect to: ${redirectTo}`, {
-    status: 307,
-    headers: { Location: redirectTo },
+  const response = await oidcLogoutHandler({
+    clientId,
+    clientSecret,
+    baseUrl,
+    postLogoutRedirectUri,
+    idToken: session.idToken,
   });
   await sessionStore.delete(response);
   return response;
