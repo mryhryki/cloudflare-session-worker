@@ -38,7 +38,7 @@ export const logoutHandler = async (
 
   const sessionId = getSessionId(req, config.cookieName);
   if (typeof sessionId !== "string") {
-    return getDefaultErrorResponse(config.defaultReturnTo, req.url);
+    return getDefaultErrorResponse(config.fallbackPath, req.url);
   }
 
   const sessionStore = await getSessionStore({
@@ -49,7 +49,7 @@ export const logoutHandler = async (
   });
   const session = await sessionStore.get();
   if (session?.status !== "logged-in") {
-    return getDefaultErrorResponse(config.defaultReturnTo, req.url);
+    return getDefaultErrorResponse(config.fallbackPath, req.url);
   }
 
   const response = await oidcLogoutHandler({

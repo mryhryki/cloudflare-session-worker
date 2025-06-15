@@ -16,7 +16,7 @@ describe("getSessionConfiguration", () => {
     {
       argument: {},
       expectedResult: {
-        defaultReturnTo: "/",
+        fallbackPath: "/",
         cookieName: DefaultCookieName,
         maxLifetimeSec: DefaultMaxLifetimeSec,
         idleLifetimeSec: DefaultIdleLifetimeSec,
@@ -24,10 +24,10 @@ describe("getSessionConfiguration", () => {
     },
     {
       argument: {
-        defaultReturnTo: "/home",
+        fallbackPath: "/home",
       },
       expectedResult: {
-        defaultReturnTo: "/home",
+        fallbackPath: "/home",
         cookieName: DefaultCookieName,
         maxLifetimeSec: DefaultMaxLifetimeSec,
         idleLifetimeSec: DefaultIdleLifetimeSec,
@@ -38,7 +38,7 @@ describe("getSessionConfiguration", () => {
         cookieName: "session-id",
       },
       expectedResult: {
-        defaultReturnTo: "/",
+        fallbackPath: "/",
         cookieName: "session-id",
         maxLifetimeSec: DefaultMaxLifetimeSec,
         idleLifetimeSec: DefaultIdleLifetimeSec,
@@ -49,7 +49,7 @@ describe("getSessionConfiguration", () => {
         idleLifetimeSec: 12345,
       },
       expectedResult: {
-        defaultReturnTo: "/",
+        fallbackPath: "/",
         cookieName: DefaultCookieName,
         maxLifetimeSec: DefaultMaxLifetimeSec,
         idleLifetimeSec: 12345,
@@ -60,7 +60,7 @@ describe("getSessionConfiguration", () => {
         maxLifetimeSec: 23456,
       },
       expectedResult: {
-        defaultReturnTo: "/",
+        fallbackPath: "/",
         cookieName: DefaultCookieName,
         maxLifetimeSec: 23456,
         idleLifetimeSec: DefaultIdleLifetimeSec,
@@ -68,13 +68,13 @@ describe("getSessionConfiguration", () => {
     },
     {
       argument: {
-        defaultReturnTo: "/home",
+        fallbackPath: "/home",
         cookieName: "custom-name",
         idleLifetimeSec: 12345,
         maxLifetimeSec: 23456,
       },
       expectedResult: {
-        defaultReturnTo: "/home",
+        fallbackPath: "/home",
         cookieName: "custom-name",
         maxLifetimeSec: 23456,
         idleLifetimeSec: 12345,

@@ -41,7 +41,7 @@ export const loginHandler = async (
 
     const session = await sessionStore.get();
     if (session?.status === "logged-in") {
-      const location = forceSameOrigin(config.defaultReturnTo, req.url);
+      const location = forceSameOrigin(config.fallbackPath, req.url);
       return new Response(`Redirect to: ${location}`, {
         status: 307,
         headers: { Location: location },
