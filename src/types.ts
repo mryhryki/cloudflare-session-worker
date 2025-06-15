@@ -19,6 +19,7 @@ export interface OidcParams {
   // e.g.
   // - Amazon Cognito: https://cognito-idp.{region}.amazonaws.com/{region}_{random}
   baseUrl: string;
+  postLogoutRedirectUri: string;
 }
 
 export interface InitSessionHandlerParams {
@@ -39,13 +40,14 @@ export interface UserInfoByIdToken {
 export interface NotLoggedInSessionData {
   status: "not-logged-in";
   loginContext: {
-    pkceVerifier: string;
+    pkceCodeVerifier: string;
     returnTo?: string | null | undefined;
   };
 }
 
 export interface LoggedInSessionData {
   status: "logged-in";
+  idToken: string;
   user: UserInfoByIdToken;
 }
 
@@ -97,7 +99,7 @@ export type CreateSessionStore = (
 ) => Promise<SessionStoreInterface>;
 
 export interface SessionConfiguration {
-  defaultReturnTo: string;
+  fallbackPath: string;
   cookieName: string;
   maxLifetimeSec: number;
   idleLifetimeSec: number;

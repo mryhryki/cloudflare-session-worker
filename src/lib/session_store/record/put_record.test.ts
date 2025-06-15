@@ -8,7 +8,7 @@ describe("generatePutRecordFunction()", () => {
   const SessionId =
     "bf0a9e354aa03f09f9db02c132a290095bc7391949a58f71826b91cc76221fef";
   const Config: SessionConfiguration = {
-    defaultReturnTo: "/",
+    fallbackPath: "/",
     cookieName: "session",
     maxLifetimeSec: 1000,
     idleLifetimeSec: 200,
@@ -17,7 +17,7 @@ describe("generatePutRecordFunction()", () => {
   const Data: SessionData = {
     status: "not-logged-in",
     loginContext: {
-      pkceVerifier: "abcd1234",
+      pkceCodeVerifier: "abcd1234",
     },
   };
 

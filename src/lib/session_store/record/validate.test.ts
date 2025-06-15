@@ -14,12 +14,13 @@ describe("validateSessionRecord()", () => {
   const notLoggedInSessionData: NotLoggedInSessionData = {
     status: "not-logged-in",
     loginContext: {
-      pkceVerifier: "test-pkce-verifier",
+      pkceCodeVerifier: "test-pkce-verifier",
       returnTo: "/path/to/return",
     },
   };
   const loggedInSessionData: LoggedInSessionData = {
     status: "logged-in",
+    idToken: "pseudo-id-token",
     user: {
       iss: "https://issuer.example",
       sub: "35b456ff-535f-4eba-a029-adda9dad7dbb",
@@ -73,7 +74,7 @@ describe("validateSessionRecord()", () => {
           ...notLoggedInSessionData,
           loginContext: {
             ...notLoggedInSessionData.loginContext,
-            pkceVerifier: null,
+            pkceCodeVerifier: null,
           },
         },
         expiration,

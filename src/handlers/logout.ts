@@ -1,14 +1,8 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import { getOidcConfiguration } from "../lib/oidc/configucation.ts";
-import { oidcRequestHandler } from "../lib/oidc/odic_request.ts";
+import { oidcLogoutHandler } from "../lib/oidc/odic_logout.ts";
 import { getSessionId } from "../lib/session_store/cookie/get.ts";
-import { createSessionStore } from "../lib/session_store/create.ts";
 import { getSessionStore } from "../lib/session_store/get.ts";
-import type {
-  OidcParams,
-  SessionConfiguration,
-  SessionPaths,
-} from "../types.ts";
+import type { OidcParams, SessionConfiguration } from "../types.ts";
 import { isInLocalDevelopment } from "../util/request.ts";
 import { forceSameOrigin } from "../util/url.ts";
 
@@ -19,32 +13,52 @@ interface LoginHandlerArgs {
   req: Request;
 }
 
+const getDefaultErrorResponse = (
+  returnTo: string,
+  requestUrl: string,
+): Response => {
+  return new Response(null, {
+    status: 307,
+    headers: {
+      Location: forceSameOrigin(returnTo, requestUrl),
+      "Content-Type": "text/plan",
+    },
+  });
+};
+
 export const logoutHandler = async (
   args: LoginHandlerArgs,
 ): Promise<Response> => {
-  const { req, config, kv, oidcParams } = args;
-
-  const oidcConfiguration = await getOidcConfiguration(oidcParams);
-  const { end_session_endpoint: endSessionEndpoint } =
-    oidcConfiguration.serverMetadata();
-  const redirectTo =
-    endSessionEndpoint ?? forceSameOrigin(config.defaultReturnTo, req.url);
-
-  const response = new Response(`Redirect to: ${redirectTo}`, {
-    status: 307,
-    headers: { Location: redirectTo },
-  });
+  const {
+    req,
+    config,
+    kv,
+    oidcParams: { clientId, clientSecret, baseUrl, postLogoutRedirectUri },
+  } = args;
 
   const sessionId = getSessionId(req, config.cookieName);
-  if (typeof sessionId === "string") {
-    const sessionStore = await getSessionStore({
-      config,
-      useSecureCookie: !isInLocalDevelopment(req),
-      kv,
-      sessionId,
-    });
-    await sessionStore.delete(response);
+  if (typeof sessionId !== "string") {
+    return getDefaultErrorResponse(config.fallbackPath, req.url);
   }
 
+  const sessionStore = await getSessionStore({
+    config,
+    useSecureCookie: !isInLocalDevelopment(req),
+    kv,
+    sessionId,
+  });
+  const session = await sessionStore.get();
+  if (session?.status !== "logged-in") {
+    return getDefaultErrorResponse(config.fallbackPath, req.url);
+  }
+
+  const response = await oidcLogoutHandler({
+    clientId,
+    clientSecret,
+    baseUrl,
+    postLogoutRedirectUri,
+    idToken: session.idToken,
+  });
+  await sessionStore.delete(response);
   return response;
 };

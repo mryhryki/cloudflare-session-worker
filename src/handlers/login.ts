@@ -22,7 +22,13 @@ interface LoginHandlerArgs {
 export const loginHandler = async (
   args: LoginHandlerArgs,
 ): Promise<Response> => {
-  const { req, config, kv, paths, oidcParams } = args;
+  const {
+    req,
+    config,
+    kv,
+    paths,
+    oidcParams: { clientId, clientSecret, baseUrl },
+  } = args;
 
   const sessionId = getSessionId(req, config.cookieName);
   if (typeof sessionId === "string") {
@@ -35,7 +41,7 @@ export const loginHandler = async (
 
     const session = await sessionStore.get();
     if (session?.status === "logged-in") {
-      const location = forceSameOrigin(config.defaultReturnTo, req.url);
+      const location = forceSameOrigin(config.fallbackPath, req.url);
       return new Response(`Redirect to: ${location}`, {
         status: 307,
         headers: { Location: location },
@@ -43,15 +49,33 @@ export const loginHandler = async (
     }
   }
 
-  const newSession = await createSessionStore({
+  const newSessionStore = await createSessionStore({
     config,
     useSecureCookie: !isInLocalDevelopment(req),
     kv,
   });
 
-  return await oidcRequestHandler(req, {
+  const { response, values } = await oidcRequestHandler({
+    requestUrl: req.url,
     callbackPath: paths.callback,
-    oidcParams,
-    session: newSession,
+    clientId,
+    clientSecret,
+    baseUrl,
   });
+
+  if (values != null) {
+    const { pkceCodeVerifier } = values;
+    await newSessionStore.put(
+      {
+        status: "not-logged-in",
+        loginContext: {
+          pkceCodeVerifier,
+          returnTo: new URL(req.url).searchParams.get("returnTo") ?? null,
+        },
+      },
+      response,
+    );
+  }
+
+  return response;
 };

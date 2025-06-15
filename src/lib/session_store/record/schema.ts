@@ -3,13 +3,14 @@ import { z } from "zod";
 const NotLoggedInSessionDataSchema = z.object({
   status: z.literal("not-logged-in"),
   loginContext: z.object({
-    pkceVerifier: z.string(),
+    pkceCodeVerifier: z.string(),
     returnTo: z.string().nullish(), // string | null | undefined
   }),
 });
 
 const LoggedInSessionDataSchema = z.object({
   status: z.literal("logged-in"),
+  idToken: z.string(),
   user: z
     .object({
       iss: z.string().optional(),
