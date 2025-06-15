@@ -17,7 +17,7 @@ describe("generatePutRecordFunction()", () => {
   const Data: SessionData = {
     status: "not-logged-in",
     loginContext: {
-      pkceVerifier: "abcd1234",
+      pkceCodeVerifier: "abcd1234",
     },
   };
 

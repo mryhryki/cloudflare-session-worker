@@ -47,6 +47,9 @@ export default {
           clientSecret: getRequiredEnv("OIDC__CLIENT_SECRET"),
           // e.g. https://your-auth-domain.example
           baseUrl: getRequiredEnv("OIDC__BASE_URL"),
+          postLogoutRedirectUri: getRequiredEnv(
+            "OIDC__POST_LOGOUT_REDIRECT_URI",
+          ),
         },
         session: undefined,
       },

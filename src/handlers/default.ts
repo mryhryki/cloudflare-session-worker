@@ -2,7 +2,6 @@ import type { KVNamespace } from "@cloudflare/workers-types";
 import { getSessionId } from "../lib/session_store/cookie/get.ts";
 import { getSessionStore } from "../lib/session_store/get.ts";
 import type {
-  OidcParams,
   OnRequestWithAuth,
   SessionConfiguration,
   SessionPaths,

@@ -14,7 +14,7 @@ describe("validateSessionRecord()", () => {
   const notLoggedInSessionData: NotLoggedInSessionData = {
     status: "not-logged-in",
     loginContext: {
-      pkceVerifier: "test-pkce-verifier",
+      pkceCodeVerifier: "test-pkce-verifier",
       returnTo: "/path/to/return",
     },
   };
@@ -74,7 +74,7 @@ describe("validateSessionRecord()", () => {
           ...notLoggedInSessionData,
           loginContext: {
             ...notLoggedInSessionData.loginContext,
-            pkceVerifier: null,
+            pkceCodeVerifier: null,
           },
         },
         expiration,

@@ -43,15 +43,16 @@ export const loginHandler = async (
     }
   }
 
-  const newSession = await createSessionStore({
+  const newSessionStore = await createSessionStore({
     config,
     useSecureCookie: !isInLocalDevelopment(req),
     kv,
   });
 
-  return await oidcRequestHandler(req, {
+  return await oidcRequestHandler({
+    requestUrl: req.url,
     callbackPath: paths.callback,
     oidcParams,
-    session: newSession,
+    sessionStore: newSessionStore,
   });
 };

@@ -40,7 +40,7 @@ export interface UserInfoByIdToken {
 export interface NotLoggedInSessionData {
   status: "not-logged-in";
   loginContext: {
-    pkceVerifier: string;
+    pkceCodeVerifier: string;
     returnTo?: string | null | undefined;
   };
 }
